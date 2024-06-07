@@ -22,6 +22,15 @@ impl Parser {
     return token
 
   }
+  pub fn eatExpectValue(&mut self, expectedTokenValue: TokenValue, err_msg: String, tokens: &mut Vec<Token>) -> Token {
+    let token = tokens[0].clone();
+    tokens.remove(0);
+
+    if token.tokenvalue!=expectedTokenValue {
+      panic!("{}", err_msg);
+    }
+    return token
+  }
   pub fn parse(&mut self, static_tokens: Vec<Token>) -> AST::Node {
     let mut tokens = static_tokens.clone();
     let mut result = AST::Node{kind: AST::NodeKind::Program{body: Vec::<Box<AST::Node>>::new(), id: 0}};
@@ -76,7 +85,7 @@ impl Parser {
     return left
   }
   pub fn parse_exponential_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
-    let mut left = self.parse_primary_expr(tokens);
+    let mut left = self.parse_function_declaration(tokens);
     while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Exponentiation) /*||
           self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Pierwiastekidk)*/ {
       left = AST::Node{kind: AST::NodeKind::BinaryExpression{
@@ -86,7 +95,7 @@ impl Parser {
             _ => Operator::Exponentiation,
         },
 
-        right: Box::<AST::Node>::new(self.parse_primary_expr(tokens)),
+        right: Box::<AST::Node>::new(self.parse_function_declaration(tokens)),
       }};
     }
     return left
@@ -94,13 +103,19 @@ impl Parser {
   }
   pub fn parse_function_declaration(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
     let mut left = self.parse_primary_expr(tokens);
+
     if self.at(tokens).tokentype==TokenType::Let {
       let function_id = self.eat(tokens);
-      let mut args =
-      while self.eat(tokens).tokentype==TokenType::Identifier {
-        args.push(functin_args);
+      let mut args = Vec::<Token>::new();
+      while self.at(tokens).tokentype==TokenType::Identifier {
+        args.push(self.eat(tokens));
       }
+
+      //self.eatExpectValue(TokenValue::Operator(Operator::Equal), "expected equal sign".to_string(), tokens);
+      println!("FUNCTINO: {:#?}, {:#?}", function_id, args);
     }
+    return left
+  }
   pub fn parse_primary_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
     let token = self.at(tokens).tokentype;
     let eat = self.eat(tokens);
@@ -116,7 +131,7 @@ impl Parser {
       TokenType::Integer => AST::Node {kind: AST::NodeKind::NumericLiteral{ value: AST::NodeValue::Integer(
           match eat.tokenvalue { TokenValue::Int(integer) => integer, _ => panic!("???") })}},
 
-      TokarenType::OpenParen => {
+      TokenType::OpenParen => {
           let value = self.parse_expr(tokens);
           self.eatExpect(TokenType::CloseParen, "Invalid Token found, expected CloseParen `)`".to_string(), tokens);
           return value;
@@ -129,6 +144,7 @@ impl Parser {
           println!("{:#?}", value);
           return value
       },
+      TokenType::Let => AST::Node {kind: AST::NodeKind::FunctionDeclaration{identifier: Box::new(AST::Node{kind: AST::NodeKind::Identifier{symbol: "".to_string()}})}},
       _ => panic!("Invalid Token Found: {:#?}", eat)
     }
   }
