@@ -3,7 +3,7 @@ use std::{
   collections::HashMap,
 };
 #[derive(PartialEq,Clone,Debug)]
-enum Operator {
+pub enum Operator {
   Addition,
   Substraction,
   Multiplication,
@@ -12,7 +12,7 @@ enum Operator {
   Equal,
 }
 #[derive(PartialEq,Clone,Debug)]
-enum Bool {
+pub enum Bool {
   True,
   False,
 }
@@ -38,6 +38,7 @@ pub enum TokenType {
   Identifier,
   Bool,
   EOF,
+  Nullus,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Token {
@@ -47,6 +48,15 @@ pub struct Token {
 #[derive(Clone,Copy)]
 pub struct Tokenizer {}
 
+
+impl TokenValue {
+  pub fn to_string(self) -> String {
+    match self {
+      TokenValue::Identifier(s) => s,
+      _ => String::new()
+    }
+  }
+}
 
 
 impl Tokenizer {
@@ -95,6 +105,9 @@ impl Tokenizer {
         },
         "/" => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Division)});
+        },
+        "^" => {
+          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Exponentiation)});
         },
 
         _ => {
