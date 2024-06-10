@@ -10,20 +10,21 @@ fn main() {
   let tokenizer = core::tokenizer::Tokenizer {};
   let mut parser = core::parser::Parser {};
   let error_handler = core::error_handler::ErrorHandler {};
-  let interpreter = core::interpreter::Interpreter {error_handler: error_handler};
+  let mut env = core::env::Environment{ error_handler: error_handler, ..Default::default() };
+  let mut interpreter = core::interpreter::Interpreter {error_handler: error_handler};
   loop {
     print!("{}$ ", shell);
     input = String::new();
     let _ = io::stdout().flush();
     let _ = io::stdin().read_line(&mut input);
     let mut tokenized_input = tokenizer.tokenize(input);
-    println!("Tokenizer Out: {:#?}", tokenized_input);
+    //println!("Tokenizer Out: {:#?}", tokenized_input);
 
     let mut parsed_input = parser.parse(tokenized_input);
 
-    println!("Parser Out: {:#?}", parsed_input);
+    //println!("Parser Out: {:#?}", parsed_input);
 
-    let mut interpreted_input = interpreter.evaluate(parsed_input);
+    let mut interpreted_input = interpreter.evaluate(parsed_input, &mut env);
     println!("Interpreter Out: {:#?}", interpreted_input);
   }
 }

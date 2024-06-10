@@ -1,12 +1,15 @@
 use core::tokenizer::{Operator};
 //MAKE IT USE ENUM ()THING
 #[derive(Clone, Debug)]
-pub enum NodeKind {                                                                               Program {body: Vec<Box<Node>>, id: i32},
-  Identifier {symbol: String},                                                                    NumericLiteral{ value: NodeValue},
-  Expression,                                                                                     BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
+pub enum NodeKind {
+  Program {body: Vec<Box<Node>>, id: i32},
+  Identifier {symbol: String},
+  NumericLiteral{ value: NodeValue},
+  Expression,
+  BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
   NullLiteral{value: NodeValue},
-  Function,
+  FunctionDeclaration{identifier: Box<Node>, arguments: Vec<Box<Node>>, statement: Box<Node>},
 }
 #[derive(Debug, Clone)]
 pub enum NodeValue {
@@ -14,7 +17,8 @@ pub enum NodeValue {
   String(String),
   Nullus,
 }
-                                                                                                #[derive(Clone, Debug)]
+
+#[derive(Clone, Debug)]
 pub struct Node {
   pub kind: NodeKind,
 }
@@ -23,6 +27,7 @@ pub enum Fructa {
   Nullus,
   Numerum(i32),
   Filum(String),
+  Moenus(/*Node,*/ Vec<Node>, Node),
 }
 #[derive(Clone,Debug)]
 pub struct Proventus {
@@ -35,7 +40,8 @@ impl Default for Proventus {
     Proventus{value: Fructa::Nullus, id: 0}
   }
 }
-/*impl Default for NodeKind {                                                                     fn default() -> Self{ NodeKind::BinaryExpression{left: Box<Node>, right: Box<Node>, operator: Operator} } {//NodeKind {
+/*impl Default for NodeKind {
+  fn default() -> Self{ NodeKind::BinaryExpression{left: Box<Node>, right: Box<Node>, operator: Operator} } {//NodeKind {
     NodeKind::BinaryExpression{left: Box::<Node>::new(Node{kind: NodeKind::NullLiteral{value: NodeValue::Nullus}}),
         right: Box::<Node>::new(Node{kind: NodeKind::NullLiteral{value: NodeValue::Nullus}}),
         operator: Operator::Addition,
