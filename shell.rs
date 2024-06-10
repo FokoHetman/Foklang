@@ -11,6 +11,10 @@ fn main() {
   let mut parser = core::parser::Parser {};
   let error_handler = core::error_handler::ErrorHandler {};
   let mut env = core::env::Environment{ error_handler: error_handler, ..Default::default() };
+/*  env.declare(core::AST::Node{value: core::AST::NodeKind::Identifier{symbol: String::from("get")}},
+      core::AST::Proventus{value: core::AST::Fructa::Moenus(
+        
+      ),id:21});*/
   let mut interpreter = core::interpreter::Interpreter {error_handler: error_handler};
   loop {
     print!("{}$ ", shell);

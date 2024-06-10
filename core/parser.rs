@@ -141,10 +141,25 @@ impl Parser {
       
       TokenType::OpenCParen => {
           //make it own type tbh
-          let value = self.parse_expr(tokens);
-          self.eatExpect(TokenType::CloseCParen, "Invalid Token found, expected CloseCParen `}`".to_string(), tokens);
-          //println!("{:#?}", value);
-          return value
+          let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
+          while self.at(tokens).tokentype!=TokenType::CloseCParen {
+            let left = self.parse_expr(tokens);
+            let mut right = AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}};
+            match self.parse_expr(tokens).kind {
+              AST::NodeKind::BinaryExpression{ref operator, left:_, right:_} => {
+                if *operator==Operator::Equal {
+                  right = self.parse_expr(tokens);
+                }
+              }
+              _ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
+            };
+            println!("RIGHT: {:#?}", right);
+            //self.eatExpect(TokenType::CloseCParen, "Invalid Token found, expected CloseCParen".to_string(), tokens);
+            println!("LEFT: {:#?}", left);
+            args.push((Box::new(left), Box::new(right) ));
+          }
+          self.eatExpect(TokenType::CloseCParen, "Invalid token".to_string(), tokens);
+          return AST::Node{kind: AST::NodeKind::Config {arguments: args}}
       },
       TokenType::Let => {
           let function_id = self.parse_expr(tokens);

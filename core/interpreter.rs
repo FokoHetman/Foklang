@@ -37,6 +37,7 @@ impl Interpreter {
       AST::NodeKind::NumericLiteral{value:i} => AST::Proventus{value: AST::Fructa::Numerum(match i {AST::NodeValue::Integer(i) => i, _ => 0}), id: -1},
       AST::NodeKind::BinaryExpression{left:_,right:_,operator:_} => self.evaluate_binary_expression(node, env),
       AST::NodeKind::Identifier{symbol:_} => self.evaluate_identifier(node, env),
+      AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, arguments: _, statement: _} => self.evaluate_function(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
     }
@@ -110,6 +111,19 @@ impl Interpreter {
       }
       AST::Fructa::Numerum(i) => AST::Proventus {value: AST::Fructa::Numerum(i), id: -1},
       _ => panic!("damn")
+    }
+  }
+  fn evaluate_object(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
+    match node.kind {
+      AST::NodeKind::Config{arguments} => {
+        let mut args: Vec<(AST::Node, AST::Proventus)> = vec![];
+        for i in arguments {
+          args.push((*i.0.clone(), self.evaluate(*i.1.clone(), env)));
+        }
+        AST::Proventus{value: AST::Fructa::Causor(args), id: -1}
+
+      }
+      _ => panic!("evaluation non-object as object damn")
     }
   }
 }

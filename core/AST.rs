@@ -1,5 +1,7 @@
 use core::tokenizer::{Operator};
-//MAKE IT USE ENUM ()THING
+use core::builtins;
+
+
 #[derive(Clone, Debug)]
 pub enum NodeKind {
   Program {body: Vec<Box<Node>>, id: i32},
@@ -9,6 +11,7 @@ pub enum NodeKind {
   BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
   NullLiteral{value: NodeValue},
+  Config{arguments: Vec<(Box<Node>, Box<Node>)>},
   FunctionDeclaration{identifier: Box<Node>, arguments: Vec<Box<Node>>, statement: Box<Node>},
 }
 #[derive(Debug, Clone)]
@@ -28,6 +31,8 @@ pub enum Fructa {
   Numerum(i32),
   Filum(String),
   Moenus(/*Node,*/ Vec<Node>, Node),
+  BuiltIn(&dyn Fn(builtins::Arguments) -> Proventus)
+  Causor(Vec<(Node,Proventus)>),
 }
 #[derive(Clone,Debug)]
 pub struct Proventus {
@@ -40,6 +45,34 @@ impl Default for Proventus {
     Proventus{value: Fructa::Nullus, id: 0}
   }
 }
+
+/*impl Proventus {
+  fn get(self, key: Proventus) -> Proventus {
+    let mut returnd = Proventus{value:Fructa::Nullus, id:-3};
+    match self.value {
+      Fructa::Causor(arguments) => {
+        match key.value {
+          Fructa::Filum(s) => {
+            for i in arguments {
+              match i.0.kind {
+                NodeKind::Identifier{symbol} => {
+                  if symbol==s {
+                    returnd = i.1;
+                  }
+                }
+                _ => panic!("A")
+              }
+            }
+          }
+          _ => panic!("a")
+        }
+      }
+      _ =>  panic!("damnAST")
+    }
+    returnd
+  }
+}*/
+
 /*impl Default for NodeKind {
   fn default() -> Self{ NodeKind::BinaryExpression{left: Box<Node>, right: Box<Node>, operator: Operator} } {//NodeKind {
     NodeKind::BinaryExpression{left: Box::<Node>::new(Node{kind: NodeKind::NullLiteral{value: NodeValue::Nullus}}),
