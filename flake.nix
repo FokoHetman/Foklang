@@ -11,25 +11,27 @@
       packages = withPkgs (pkgs: {
         default = derivation {
           name = "foklang";
-          builder = pkgs.moreutils + /bin/install;
+          inherit (pkgs) system;
+          builder = "${pkgs.moreutils}/bin/install";
           args = [
-            (derivation {
+            "-D"
+            (derivation rec {
               name = "foklang-bin";
               inherit (pkgs) system;
               nativeBuildInputs = [
                 pkgs.coreutils
                 pkgs.mktemp
               ];
-              builder = pkgs.rustc + /bin/rustc;
+              builder = "${pkgs.rustc}/bin/rustc";
               args = [
                 "${./.}/shell.rs"
                 "-C"
-                "linker=${pkgs.clang}/bin/clang"
+                "linker=${pkgs.gcc}/bin/gcc"
                 "-o"
                 (builtins.placeholder "out")
               ];
             })
-            (builtins.placeholder "out" + /bin/foklang)
+            "${builtins.placeholder "out"}/bin/foklang"
           ];
         };
       });
