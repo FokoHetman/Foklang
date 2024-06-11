@@ -10,10 +10,11 @@
       formatter = withPkgs (pkgs: pkgs.nixfmt-rfc-style);
       packages = withPkgs (pkgs: {
         default = derivation {
+          name = "foklang";
           builder = pkgs.moreutils + /bin/install;
           args = [
             (derivation {
-              name = "foklang";
+              name = "foklang-bin";
               inherit (pkgs) system;
               nativeBuildInputs = [
                 pkgs.coreutils
