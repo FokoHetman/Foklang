@@ -3,6 +3,8 @@ use core::error_handler::ErrorHandler;
 use core::tokenizer::{Operator};
 use std::convert::TryInto;
 use core::env::Environment;
+use core::builtins;
+
 
 #[derive(Clone)]
 pub struct Interpreter {pub error_handler:ErrorHandler}
@@ -108,6 +110,19 @@ impl Interpreter {
         self.evaluate(statement, &mut function_env)
         //evaluate the statement, with defined x and y
 
+      }
+      AST::Fructa::BuiltIn(f) => {
+        let val = self.evaluate(env.node_stack[env.current_node as usize+1].clone(), env);
+        let val2 = match env.node_stack[env.current_node as usize+2].clone().kind {
+          AST::NodeKind::Identifier{symbol} => {
+            AST::Proventus{value: AST::Fructa::Filum(symbol), id: -1}
+          }
+          _ => panic!("")
+        };
+        env.current_node+=2;
+        let args = builtins::Arguments{function: builtins::FunctionArgs::get(val, val2)};
+        f(args)
+        //panic!("builtin")
       }
       AST::Fructa::Numerum(i) => AST::Proventus {value: AST::Fructa::Numerum(i), id: -1},
       _ => panic!("damn")

@@ -153,9 +153,7 @@ impl Parser {
               }
               _ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
             };
-            println!("RIGHT: {:#?}", right);
-            //self.eatExpect(TokenType::CloseCParen, "Invalid Token found, expected CloseCParen".to_string(), tokens);
-            println!("LEFT: {:#?}", left);
+            
             args.push((Box::new(left), Box::new(right) ));
           }
           self.eatExpect(TokenType::CloseCParen, "Invalid token".to_string(), tokens);

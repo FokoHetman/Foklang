@@ -31,7 +31,7 @@ pub enum Fructa {
   Numerum(i32),
   Filum(String),
   Moenus(/*Node,*/ Vec<Node>, Node),
-  BuiltIn(&dyn Fn(builtins::Arguments) -> Proventus)
+  BuiltIn(fn(builtins::Arguments) -> Proventus),
   Causor(Vec<(Node,Proventus)>),
 }
 #[derive(Clone,Debug)]
