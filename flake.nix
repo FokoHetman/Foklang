@@ -14,7 +14,7 @@
           inherit (pkgs) system;
           builder = pkgs.rustc + /bin/rustc;
           args = [
-            ./shell.rs
+            "${./.}/shell.rs"
             "-o"
             (builtins.placeholder "out")
           ];
