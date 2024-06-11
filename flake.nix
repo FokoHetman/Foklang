@@ -12,16 +12,12 @@
         default = derivation {
           name = "foklang";
           inherit (pkgs) system;
-          builder = "${pkgs.moreutils}/bin/install";
+          builder = "${pkgs.coreutils}/bin/install";
           args = [
             "-D"
-            (derivation rec {
+            (derivation {
               name = "foklang-bin";
               inherit (pkgs) system;
-              nativeBuildInputs = [
-                pkgs.coreutils
-                pkgs.mktemp
-              ];
               builder = "${pkgs.rustc}/bin/rustc";
               args = [
                 "${./.}/shell.rs"
