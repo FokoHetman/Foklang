@@ -11,10 +11,14 @@ fn main() {
   let mut parser = core::parser::Parser {};
   let error_handler = core::error_handler::ErrorHandler {};
   let mut env = core::env::Environment{ error_handler: error_handler, ..Default::default() };
-  env.declare(core::AST::Node{kind: core::AST::NodeKind::Identifier{symbol: String::from("get")}},
+  env.declare(core::AST::Node{kind: core::AST::NodeKind::Identifier{symbol: String::from("get"), childs: vec![]}},
       core::AST::Proventus{value: core::AST::Fructa::BuiltIn(
         core::builtins::get
-      ),id:21});
+      ),id:-2});
+  env.declare(core::AST::Node{kind: core::AST::NodeKind::Identifier{symbol: String::from("print"), childs: vec![]}},
+      core::AST::Proventus{value: core::AST::Fructa::BuiltIn(
+        core::builtins::print
+      ),id:-2});
   let mut interpreter = core::interpreter::Interpreter {error_handler: error_handler};
   loop {
     print!("{}$ ", shell);

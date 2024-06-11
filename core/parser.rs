@@ -123,7 +123,21 @@ impl Parser {
     let eat = self.eat(tokens);
     let empty_node = Box::<AST::Node>::new(AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}});
     match token {
-      TokenType::Identifier => AST::Node {kind: AST::NodeKind::Identifier{symbol: eat.tokenvalue.to_string()}},
+      TokenType::Identifier => {
+        let mut childs: Vec<Box<AST::Node>> = vec![];
+        while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer {
+          match self.at(tokens).tokentype {
+            TokenType::Identifier => {
+              childs.push(Box::new(AST::Node{kind: AST::NodeKind::Identifier{symbol: self.eat(tokens).tokenvalue.to_string(), childs: vec![]}}));
+            }
+            TokenType::Integer => {
+              childs.push(Box::new(self.parse_expr(tokens)));
+            }
+            _ => {break;}
+          }
+        }
+        AST::Node {kind: AST::NodeKind::Identifier{symbol: eat.tokenvalue.to_string(), childs: childs}}
+      },
 
       TokenType::Nullus => AST::Node {kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}},
       
@@ -161,14 +175,14 @@ impl Parser {
       },
       TokenType::Let => {
           let function_id = self.parse_expr(tokens);
-          let mut args = Vec::<Box<AST::Node>>::new();
+          /*let mut args = Vec::<Box<AST::Node>>::new();
           while self.at(tokens).tokentype==TokenType::Identifier {
             args.push(Box::new(self.parse_expr(tokens)));
-          }
+          }*/
           self.eatExpectValue(TokenValue::Operator(Operator::Equal), "expected =".to_string(), tokens);
           let statement = self.parse_expr(tokens);
           //println!("FUNCTION PARS:  {:#?}, {:#?}, {:#?}",function_id,args, statement);
-        return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), arguments: args, statement: Box::new(statement)}    }
+        return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
         //panic!("impl a Function here");
       }
       _ => panic!("Invalid Token Found: {:#?}", eat)

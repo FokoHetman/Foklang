@@ -5,14 +5,14 @@ use core::builtins;
 #[derive(Clone, Debug)]
 pub enum NodeKind {
   Program {body: Vec<Box<Node>>, id: i32},
-  Identifier {symbol: String},
+  Identifier {symbol: String, childs: Vec<Box<Node>>},
   NumericLiteral{ value: NodeValue},
   Expression,
   BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
   NullLiteral{value: NodeValue},
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
-  FunctionDeclaration{identifier: Box<Node>, arguments: Vec<Box<Node>>, statement: Box<Node>},
+  FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
 }
 #[derive(Debug, Clone)]
 pub enum NodeValue {

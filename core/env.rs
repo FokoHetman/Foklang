@@ -8,10 +8,10 @@ pub struct Environment {pub parent: Option<Box<Environment>>, pub functions: Vec
 impl Environment {
   pub fn declare(&mut self, identifier: AST::Node, value: AST::Proventus) -> AST::Proventus {
     match identifier.kind {
-      AST::NodeKind::Identifier{symbol: ref symbol} => {
+      AST::NodeKind::Identifier{symbol: ref symbol, ..} => {
         for i in &self.functions {
           if match &i.0.kind {
-            AST::NodeKind::Identifier{symbol:symbolIteration} => *symbolIteration==*symbol,
+            AST::NodeKind::Identifier{symbol:symbolIteration, ..} => *symbolIteration==*symbol,
             _ => panic!("Tf is that doing here? {:#?}", i)
           } {
             panic!("{}", self.error_handler.environment("already_defined").error_msg);
@@ -35,10 +35,10 @@ impl Environment {
   }
   pub fn resolve(&self, identifier: AST::Node) -> Environment {
     match identifier.kind {
-      AST::NodeKind::Identifier{symbol: ref s} => {
+      AST::NodeKind::Identifier{symbol: ref s, ..} => {
         for i in &self.functions {
           if match &i.0.kind {
-            AST::NodeKind::Identifier{symbol: s2} => {
+            AST::NodeKind::Identifier{symbol: s2, ..} => {
               *s==*s2
             },
             _ => panic!("huh")
@@ -55,13 +55,12 @@ impl Environment {
     }
   }
   pub fn get(&self, identifier: AST::Node) -> AST::Proventus {
-
     let env = self.resolve(identifier.clone());
     match identifier.kind {
-      AST::NodeKind::Identifier{symbol: ref s} => {
+      AST::NodeKind::Identifier{symbol: ref s, ..} => {
         for i in env.functions {
           if match &i.0.kind {
-            AST::NodeKind::Identifier{symbol: s2} => {
+            AST::NodeKind::Identifier{symbol: s2, ..} => {
               *s==*s2
             }
             _ => panic!("a")
