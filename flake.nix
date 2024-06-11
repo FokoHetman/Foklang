@@ -10,13 +10,25 @@
       formatter = withPkgs (pkgs: pkgs.nixfmt-rfc-style);
       packages = withPkgs (pkgs: {
         default = derivation {
-          name = "foklang";
-          inherit (pkgs) system;
-          builder = pkgs.rustc + /bin/rustc;
+          builder = pkgs.moreutils + /bin/install;
           args = [
-            "${./.}/shell.rs"
-            "-o"
-            (builtins.placeholder "out")
+            (derivation {
+              name = "foklang";
+              inherit (pkgs) system;
+              nativeBuildInputs = [
+                pkgs.coreutils
+                pkgs.mktemp
+              ];
+              builder = pkgs.rustc + /bin/rustc;
+              args = [
+                "${./.}/shell.rs"
+                "-C"
+                "linker=${pkgs.clang}/bin/clang"
+                "-o"
+                (builtins.placeholder "out")
+              ];
+            })
+            (builtins.placeholder "out" + /bin/foklang)
           ];
         };
       });
