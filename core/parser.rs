@@ -185,6 +185,9 @@ impl Parser {
         return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
         //panic!("impl a Function here");
       }
+      TokenType::SemiColon => {
+        self.parse_expr(tokens)
+      }
       _ => panic!("Invalid Token Found: {:#?}", eat)
     }
   }

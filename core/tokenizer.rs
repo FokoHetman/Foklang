@@ -39,6 +39,7 @@ pub enum TokenType {
   Bool,
   EOF,
   Nullus,
+  SemiColon,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Token {
@@ -109,7 +110,9 @@ impl Tokenizer {
         "^" => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Exponentiation)});  
         },
-
+        ";" => {
+          tokens.push(Token{tokentype: TokenType::SemiColon, tokenvalue: TokenValue::Nullus});
+        },
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());
           if self.is_numeric(list_input[0].to_string()) {
