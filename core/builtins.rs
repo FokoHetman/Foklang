@@ -1,24 +1,34 @@
 use core::AST::{*};
+use core::env::Environment;
 
 pub fn print(arguments: Arguments) -> Proventus {
   match arguments.function {
     FunctionArgs::print(args) => {
       for i in args {
-        match i.value {
+        print!("{}", i.value.display());
+        /*match i.value {
           Fructa::Filum(s) => {print!("{}", s)},
           Fructa::Numerum(i) => {print!("{}", i)},
           _ => panic!("Display not implemented for: {:#?}", i.value)
-        }
+        }*/
       }
     }
     _ => panic!("???")
   }
-  return Proventus{value: Fructa::Nullus, id: -2}
+  Proventus{value: Fructa::Nullus, id: -2}
 }
-/*pub fn println(arguments: Arguments) -> Proventus {
 
-
-}*/
+pub fn println(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::print(args) => {
+      for i in args {
+        println!("{}", i.value.display());
+      }
+    }
+    _ => panic!("???")
+  }
+  Proventus{value: Fructa::Nullus, id: -2}
+}
 
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
@@ -41,6 +51,16 @@ pub fn get(arguments: Arguments) -> Proventus {
             }
             _ => panic!("a")
           }
+        },
+        Fructa::Inventarii(body) => {
+          println!("{:#?}", key);
+          match key.value {
+            Fructa::Numerum(i) => {
+              returnd = body[i as usize].clone();
+
+            }
+            _ => panic!("index expected damn man")
+          }
         }
         _ =>  panic!("damnAST")
       }
@@ -49,6 +69,23 @@ pub fn get(arguments: Arguments) -> Proventus {
   }
   returnd
 }
+
+pub fn declare_builtins(env: &mut Environment) {
+  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("get"), childs: vec![]}},
+      Proventus{value: Fructa::BuiltIn(
+        get
+      ),id:-2});
+  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("print"), childs: vec![]}},
+      Proventus{value: Fructa::BuiltIn(
+        print
+      ),id:-2});
+  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("println"), childs: vec![]}},
+      Proventus{value: Fructa::BuiltIn(
+        println
+      ), id:-2});
+}
+
+
 
 #[derive(Debug)]
 pub struct Arguments {

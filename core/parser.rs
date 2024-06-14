@@ -152,7 +152,14 @@ impl Parser {
           self.eatExpect(TokenType::CloseParen, "Invalid Token found, expected CloseParen `)`".to_string(), tokens);
           return value;
       },
-      
+      TokenType::OpenSParen => {
+        let mut args: Vec<Box<AST::Node>> = vec![];
+        while self.at(tokens).tokentype!=TokenType::CloseSParen {
+          args.push(Box::new(self.parse_expr(tokens)));
+        }
+        self.eatExpect(TokenType::CloseSParen, "Invalid token".to_string(), tokens);
+        return AST::Node{kind: AST::NodeKind::List {body: args}};
+      },
       TokenType::OpenCParen => {
           //make it own type tbh
           let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];

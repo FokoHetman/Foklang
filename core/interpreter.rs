@@ -39,10 +39,25 @@ impl Interpreter {
       AST::NodeKind::NumericLiteral{value:i} => AST::Proventus{value: AST::Fructa::Numerum(match i {AST::NodeValue::Integer(i) => i, _ => 0}), id: -1},
       AST::NodeKind::BinaryExpression{left:_,right:_,operator:_} => self.evaluate_binary_expression(node, env),
       AST::NodeKind::Identifier{symbol:_, ..} => self.evaluate_identifier(node, env),
+      AST::NodeKind::List{..} => self.evaluate_list(node, env),
       AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
     }
+  }
+  fn evaluate_list(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
+    match node.kind {
+      AST::NodeKind::List{body} => {
+        let mut args: Vec<AST::Proventus> = vec![];
+        for i in body {
+          args.push(self.evaluate(*i.clone(), env));
+        }
+        AST::Proventus{value: AST::Fructa::Inventarii(args), id: -1}
+        
+      }
+      _ => panic!("A")
+    }
+
   }
   fn evaluate_function(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
@@ -152,8 +167,17 @@ impl Interpreter {
         }
         else if f==builtins::get {
           fargs = builtins::FunctionArgs::get(self.evaluate(args_vec[0].clone(), env), 
-                AST::Proventus{value: AST::Fructa::Filum(match args_vec[1].clone().kind {AST::NodeKind::Identifier{symbol,..} => symbol,
-                    _=>String::new()}), id: -1});
+                AST::Proventus{value: match args_vec[1].clone().kind { AST::NodeKind::Identifier{symbol,..} => AST::Fructa::Filum(symbol),
+                AST::NodeKind::NumericLiteral{value} => match value { AST::NodeValue::Integer(i) => AST::Fructa::Numerum(i), _ => AST::Fructa::Numerum(0)}, 
+                _ => AST::Fructa::Nullus}, id: -1});
+        }
+        else if f==builtins::println {
+          let mut n_args: Vec<AST::Proventus> = vec![];
+          for i in args_vec {
+            n_args.push(self.evaluate(i, env));
+          }
+          fargs = builtins::FunctionArgs::print(n_args);
+
         }
         let args = builtins::Arguments{function: fargs};
         f(args)

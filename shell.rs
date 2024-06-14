@@ -11,14 +11,9 @@ fn main() {
   let mut parser = core::parser::Parser {};
   let error_handler = core::error_handler::ErrorHandler {};
   let mut env = core::env::Environment{ error_handler: error_handler, ..Default::default() };
-  env.declare(core::AST::Node{kind: core::AST::NodeKind::Identifier{symbol: String::from("get"), childs: vec![]}},
-      core::AST::Proventus{value: core::AST::Fructa::BuiltIn(
-        core::builtins::get
-      ),id:-2});
-  env.declare(core::AST::Node{kind: core::AST::NodeKind::Identifier{symbol: String::from("print"), childs: vec![]}},
-      core::AST::Proventus{value: core::AST::Fructa::BuiltIn(
-        core::builtins::print
-      ),id:-2});
+
+
+  core::builtins::declare_builtins(&mut env);
   let mut interpreter = core::interpreter::Interpreter {error_handler: error_handler};
   loop {
     print!("{}$ ", shell);
@@ -33,6 +28,7 @@ fn main() {
     //println!("Parser Out: {:#?}", parsed_input);
 
     let mut interpreted_input = interpreter.evaluate(parsed_input, &mut env);
-    println!("Interpreter Out: {:#?}", interpreted_input);
+    //println!("Interpreter Out: {:#?}", interpreted_input);
+    core::builtins::println(core::builtins::Arguments{function: core::builtins::FunctionArgs::print(vec![interpreted_input])});
   }
 }

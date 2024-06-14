@@ -32,6 +32,8 @@ pub enum TokenType {
   OpenParen,
   CloseCParen,
   OpenCParen,
+  CloseSParen,
+  OpenSParen,
   Integer,
   Operator,
   Let,
@@ -80,6 +82,12 @@ impl Tokenizer {
       pass = false;
       let current_char = list_input[0];
       match current_char {
+        "[" => {
+          tokens.push(Token{tokentype: TokenType::OpenSParen, tokenvalue: TokenValue::Nullus});
+        },
+        "]" => {
+          tokens.push(Token{tokentype: TokenType::CloseSParen, tokenvalue: TokenValue::Nullus});
+        },
         "{" => {
           tokens.push(Token{tokentype: TokenType::OpenCParen, tokenvalue: TokenValue::Nullus});
         },

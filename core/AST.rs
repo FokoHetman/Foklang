@@ -11,6 +11,7 @@ pub enum NodeKind {
   BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
   NullLiteral{value: NodeValue},
+  List{body: Vec<Box<Node>>},
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
 }
@@ -33,6 +34,7 @@ pub enum Fructa {
   Moenus(/*Node,*/ Vec<Node>, Node),
   BuiltIn(fn(builtins::Arguments) -> Proventus),
   Causor(Vec<(Node,Proventus)>),
+  Inventarii(Vec<Proventus>),
 }
 #[derive(Clone,Debug)]
 pub struct Proventus {
@@ -46,6 +48,24 @@ impl Default for Proventus {
   }
 }
 
+impl Fructa {
+  pub fn display(&self) -> String {
+    match self {
+      Fructa::Nullus => String::new(),
+      Fructa::Numerum(i) => i.to_string(),
+      Fructa::Filum(s) => s.to_string(),
+      Fructa::Causor(b) => format!("{:#?}", b),
+      Fructa::Inventarii(b) => {
+        let mut result = String::new();
+        for i in b {
+          result+=&(i.value.display()+";")
+        }
+        result
+      },
+      _ => panic!("display not implemented")
+    }
+  }
+}
 /*impl Proventus {
   fn get(self, key: Proventus) -> Proventus {
     let mut returnd = Proventus{value:Fructa::Nullus, id:-3};

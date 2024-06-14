@@ -48,7 +48,7 @@ impl Environment {
         };
         match &self.parent {
           Some(parent) => parent.resolve(identifier),
-          None => panic!("No such variable or something idk")
+          None => panic!("No such variable or something idk: {:#?}", identifier)
         }
       }
       _ => panic!("huh")
