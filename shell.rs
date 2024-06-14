@@ -33,6 +33,7 @@ fn main() {
     //println!("Parser Out: {:#?}", parsed_input);
 
     let mut interpreted_input = interpreter.evaluate(parsed_input, &mut env);
-    println!("Interpreter Out: {:#?}", interpreted_input);
+    //println!("Interpreter Out: {:#?}", interpreted_input);
+    core::builtins::println(core::builtins::Arguments{function: core::builtins::FunctionArgs::print(vec![interpreted_input])});
   }
 }

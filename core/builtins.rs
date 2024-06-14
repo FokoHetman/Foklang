@@ -7,7 +7,8 @@ pub fn print(arguments: Arguments) -> Proventus {
         match i.value {
           Fructa::Filum(s) => {print!("{}", s)},
           Fructa::Numerum(i) => {print!("{}", i)},
-          _ => panic!("Display not implemented for: {:#?}", i.value)
+          Fructa::Nullus => {}
+          _ => panic!("`print` not implemented for: {:#?}", i.value)
         }
       }
     }
@@ -19,6 +20,24 @@ pub fn print(arguments: Arguments) -> Proventus {
 
 
 }*/
+pub fn println(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::print(args) => {
+      for i in args {
+          println!("{}", i.value.display());
+        /*match i.value {
+          Fructa::Filum(s) => {println!("{}", s)},
+          Fructa::Numerum(i) => {println!("{}", i)},
+          Fructa::Nullus => {},
+          _ => panic!("`println` not implemented for: {:#?}", i.value)
+        }*/
+      }
+    }
+    _ => panic!("???")
+  }
+  Proventus{value: Fructa::Nullus, id: -2}
+}
+
 
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};

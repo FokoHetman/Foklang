@@ -40,6 +40,18 @@ pub struct Proventus {
   pub id: i32,
 }
 
+impl Fructa {
+  pub fn display(&self) -> String {
+    match self {
+      Fructa::Nullus => String::new(),
+      Fructa::Numerum(i) => String::from(i.to_string()),
+      Fructa::Filum(s) => String::from(s),
+      Fructa::Causor(b) => format!("{:#?}", b),
+      _ => panic!("Display not implemented for {:#?}", self)
+    }
+  }
+}
+
 impl Default for Proventus {
   fn default() -> Proventus {
     Proventus{value: Fructa::Nullus, id: 0}

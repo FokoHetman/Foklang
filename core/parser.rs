@@ -152,6 +152,11 @@ impl Parser {
           self.eatExpect(TokenType::CloseParen, "Invalid Token found, expected CloseParen `)`".to_string(), tokens);
           return value;
       },
+      TokenType::Quote => {
+        let value = self.parse_expr(tokens);
+        self.eatExpect(TokenType::Quote, "Invalud Token found, end of quote expected".to_string(), tokens);
+        return AST::Node{kind: AST::NodeKind::StringLiteral{value: AST::NodeValue::String(match value.kind => {AST::NodeKind::Identifier{symbol..} => symbol, _ => String::new()})}}
+      },
       
       TokenType::OpenCParen => {
           //make it own type tbh

@@ -40,6 +40,7 @@ pub enum TokenType {
   EOF,
   Nullus,
   SemiColon,
+  Quote,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Token {
@@ -67,7 +68,7 @@ impl Tokenizer {
     }
     return false
   }
-  pub fn is_alpha(self, string: String) -> bool {
+  pub fn is_identifier(self, string: String) -> bool {
     return string.to_lowercase()!=string.to_uppercase();
   }
 
@@ -113,8 +114,11 @@ impl Tokenizer {
         ";" => {
           tokens.push(Token{tokentype: TokenType::SemiColon, tokenvalue: TokenValue::Nullus});
         },
+        "\"" => {
+          tokens.push(Token{tokentype: TokenType::Quote, tokenvalue: TokenValue::Nullus});
+        },
         _ => {
-          pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());
+          pass = self.is_numeric(list_input[0].to_string()) || self.is_identifier(list_input[0].to_string());
           if self.is_numeric(list_input[0].to_string()) {
             let mut tmp_num: String = String::new();
             while list_input.len()>0 && char::from_str(list_input[0]).unwrap().is_numeric() {
@@ -123,9 +127,9 @@ impl Tokenizer {
             }
             tokens.push(Token{tokentype: TokenType::Integer, tokenvalue: TokenValue::Int(tmp_num.parse::<i32>().unwrap())});
           }
-          else if self.is_alpha(list_input[0].to_string()) {
+          else if self.is_identifier(list_input[0].to_string()) {
             let mut tmp_ident: String = String::new();
-            while list_input.len()>0 && self.is_alpha(list_input[0].to_string()) {
+            while list_input.len()>0 && self.is_identifier(list_input[0].to_string()) {
               tmp_ident+=list_input[0];
               list_input.remove(0);
             }
