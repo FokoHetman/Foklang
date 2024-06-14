@@ -4,14 +4,15 @@ aka Foko (literally me)'s language inspired by haskell, nix and (in the future) 
 # Installation
 ### For nix users:
 * shell:
-> `nix run gitub:fokohetman/foklang-temp`
+```nix
+nix run gitub:fokohetman/foklang-temp```
 * future options...
 ### For others:
 * shell:
 *requires git and rustc*
->`git clone https://github.com/fokohetman/foklang-temp`
->`rustc shell.rs`
->`./shell`
+```git clone https://github.com/fokohetman/foklang-temp
+rustc shell.rs
+./shell```
 
 # Usage
 Upon running shell, you will find yourself in foklang environment:
