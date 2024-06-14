@@ -7,6 +7,7 @@ pub enum NodeKind {
   Program {body: Vec<Box<Node>>, id: i32},
   Identifier {symbol: String, childs: Vec<Box<Node>>},
   NumericLiteral{ value: NodeValue},
+  StringLiteral{value: NodeValue},
   Expression,
   BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
