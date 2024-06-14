@@ -53,7 +53,6 @@ pub fn get(arguments: Arguments) -> Proventus {
           }
         },
         Fructa::Inventarii(body) => {
-          println!("{:#?}", key);
           match key.value {
             Fructa::Numerum(i) => {
               returnd = body[i as usize].clone();
