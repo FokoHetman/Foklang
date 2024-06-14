@@ -11,7 +11,8 @@ nix run gitub:fokohetman/foklang-temp
 ### For others:
 * shell:
 *requires git and rustc*
-```git clone https://github.com/fokohetman/foklang-temp
+```
+git clone https://github.com/fokohetman/foklang-temp
 rustc shell.rs
 ./shell
 ```
