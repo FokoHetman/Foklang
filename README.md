@@ -2,11 +2,11 @@
 aka Foko (literally me)'s language inspired by haskell, nix and (in the future) perl. Mostly was inspired to make it because configs (why use universal stuff like json when i can have my own thing) and well... having your own language is,,, kinda cool I think?
 
 # Installation
-For nix users:
+## For nix users:
 * shell:
 > `nix run gitub:fokohetman/foklang-temp`
 * future options...
-For others:
+## For others:
 * shell:
 *requires git and rustc*
 `git clone https://github.com/fokohetman/foklang-temp`
