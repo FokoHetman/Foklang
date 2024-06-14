@@ -10,12 +10,12 @@ nix run gitub:fokohetman/foklang-temp
 * future options...
 ### For others:
 * shell:
-*requires git and rustc*
 ```sh
 git clone https://github.com/fokohetman/foklang-temp
 rustc shell.rs
 ./shell
 ```
+> *requires git and rustc
 
 # Usage
 Upon running shell, you will find yourself in foklang environment:
