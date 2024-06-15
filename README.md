@@ -22,9 +22,20 @@ Upon running shell, you will find yourself in foklang environment:
 ```
 foklang$ 
 ```
-let's write a simple function (this is a functional language after all):
+
+alright, time for... hello world I guess?
 ```
-foklang$ let addtwo x = x+2
-foklang$ addtwo 2
-foklang$
-``` Ima finish this later because gotta make shell actually not print Proventus, and the Fructa instead
+foklang$ println "hello world"
+hello world
+```
+cool i guess? Let's get to the cool stuff
+```
+foklang$ let fn x y = x+y
+```
+what could that do? Exactly! It defines a function that takes arguments (x,y), and adds them together.
+Let's see it in action
+```
+foklang$ fn 2 4
+6
+```
+neat
