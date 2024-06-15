@@ -180,68 +180,25 @@ impl Parser {
           self.eatExpect(TokenType::CloseCParen, "Invalid token".to_string(), tokens);
           return AST::Node{kind: AST::NodeKind::Config {arguments: args}}
       },
-      TokenType::Apostroph => {
-        let value = self.parse_expr(tokens);
-        if !match value.kind {
-          AST::NodeKind::Identifier{ref symbol,..} => symbol.len()==1,
-          _ => false
-        } {
-          panic!("not a char, but a string")
-        };
-        self.eatExpect(TokenType::Apostroph, "Invalid token".to_string(), tokens);
-        return AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(match value.kind {AST::NodeKind::Identifier{ref symbol, ..} => 
-            symbol.chars().collect::<Vec<char>>()[0], _ => 'h'})}}
-
-      },
-      TokenType::Quotation => {
-        let mut  cvec: Vec<Box<AST::Node>> = vec![];
-        while self.at(tokens).tokentype!=TokenType::Quotation {
-          let value = self.parse_expr(tokens);
-          match value.kind {
-            AST::NodeKind::Identifier{symbol, childs} => {
-              for i in symbol.chars() {
-                cvec.push(Box::new(AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(i)}}));
-              }
-              
-              for i in childs {
-                match i.kind {
-                  AST::NodeKind::Identifier{symbol, ..} => {
-
-                    for j in symbol.chars() {
-                      cvec.push(Box::new(AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(j)}}));
-                    }
-                  }
-                  AST::NodeKind::NumericLiteral{value} => {
-                    match value {
-                      AST::NodeValue::Integer(i) => {
-                        for c in i.to_string().chars() {
-                          cvec.push(Box::new(AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(c)}}));
-                        }
-                      }
-                      _ => panic!("how")
-                    }
-                  }
-                  AST::NodeKind::Space => {
-                    cvec.push(Box::new(AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(' ')}}));
-                  }
-                  _ => panic!("why")
-                }
-              }
-            },
-            AST::NodeKind::NumericLiteral{value} => {
-              match value {
-                AST::NodeValue::Integer(i) => {
-                  for c in i.to_string().chars() {
-                    cvec.push(Box::new(AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(c)}}));
-                  }
-                }
-                _ => panic!("???")
-              }
-            },
-            _ => panic!("that is not a string according to this weird parser")
+      TokenType::Char => {
+          match eat.tokenvalue {
+            TokenValue::Char(c) => {
+              return AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(c)}}
+            }
+            _ => panic!("A")
           }
+      },
+      TokenType::String => {
+        let mut  cvec: Vec<Box<AST::Node>> = vec![];
+        match eat.tokenvalue {
+          TokenValue::String(s) => {
+            for c in s.chars() {
+              cvec.push(Box::new(AST::Node{kind: AST::NodeKind::Char {value: AST::NodeValue::Char(c)}}));
+            }
+          }
+          _ => panic!("n")
         }
-        self.eatExpect(TokenType::Quotation, "Expected \"".to_string(), tokens);
+
         return AST::Node{kind: AST::NodeKind::List {body: cvec}}
       },
       TokenType::Let => {

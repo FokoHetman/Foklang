@@ -19,7 +19,8 @@ pub enum Bool {
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenValue {
   Nullus,
-  Str(String),
+  Char(char),
+  String(String),
   Int(i32),
   Operator(Operator),
   Identifier(String),
@@ -42,8 +43,8 @@ pub enum TokenType {
   EOF,
   Nullus,
   SemiColon,
-  Apostroph,
-  Quotation,
+  Char,
+  String,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Token {
@@ -124,10 +125,22 @@ impl Tokenizer {
           tokens.push(Token{tokentype: TokenType::SemiColon, tokenvalue: TokenValue::Nullus});
         },
         "'" => {
-          tokens.push(Token{tokentype: TokenType::Apostroph, tokenvalue: TokenValue::Nullus});
+          list_input.remove(0);
+          let char = list_input[0];
+          list_input.remove(0);
+          if list_input[0]!="'" {
+            panic!("tf you doing");
+          }
+          tokens.push(Token{tokentype: TokenType::Char, tokenvalue: TokenValue::Char(char.chars().collect::<Vec<char>>()[0])});
         },
         "\"" => {
-          tokens.push(Token{tokentype: TokenType::Quotation, tokenvalue: TokenValue::Nullus});
+          let mut deval = String::new();
+          list_input.remove(0);
+          while list_input[0]!="\"" {
+            deval+=list_input[0];
+            list_input.remove(0);
+          }
+          tokens.push(Token{tokentype: TokenType::String, tokenvalue: TokenValue::String(deval)});
         },
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());
