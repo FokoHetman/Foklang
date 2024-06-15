@@ -5,11 +5,13 @@
     { self, nixpkgs }:
     let
       withPkgs = f: nixpkgs.lib.mapAttrs (k: v: f v) nixpkgs.legacyPackages;
+      config = import ./configuration.nix;
     in
     {
       formatter = withPkgs (pkgs: pkgs.nixfmt-rfc-style);
       packages = withPkgs (pkgs: {
         default = derivation {
+          #separator = config.separator;
           name = "foklang";
           inherit (pkgs) system;
           builder = "${pkgs.coreutils}/bin/install";
