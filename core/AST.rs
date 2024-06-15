@@ -10,6 +10,8 @@ pub enum NodeKind {
   Expression,
   BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
+  Space,
+  Char{value: NodeValue},
   NullLiteral{value: NodeValue},
   List{body: Vec<Box<Node>>},
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
@@ -19,6 +21,7 @@ pub enum NodeKind {
 pub enum NodeValue {
   Integer(i32),
   String(String),
+  Char(char),
   Nullus,
 }
 
@@ -30,6 +33,7 @@ pub struct Node {
 pub enum Fructa {
   Nullus,
   Numerum(i32),
+  Ustulo(char),
   Filum(String),
   Moenus(/*Node,*/ Vec<Node>, Node),
   BuiltIn(fn(builtins::Arguments) -> Proventus),
@@ -57,11 +61,26 @@ impl Fructa {
       Fructa::Causor(b) => format!("{:#?}", b),
       Fructa::Inventarii(b) => {
         let mut result = String::new();
+        let mut string = String::new();
+        let mut stringlist = true;
+
         for i in b {
+          string += &match i.value {
+            Fructa::Ustulo(c) => c.to_string(),
+            _ => {
+              stringlist = false;
+              String::new()
+            }
+          };
           result+=&(i.value.display()+";")
         }
-        result
+        if stringlist {
+          string
+        } else {
+          result
+        }
       },
+      Fructa::Ustulo(c) => c.to_string(),
       _ => panic!("display not implemented")
     }
   }

@@ -42,7 +42,16 @@ impl Interpreter {
       AST::NodeKind::List{..} => self.evaluate_list(node, env),
       AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
+      AST::NodeKind::Char{..} => self.evaluate_char(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
+    }
+  }
+  fn evaluate_char(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
+    match node.kind {
+      AST::NodeKind::Char{value} => {
+        AST::Proventus{value: AST::Fructa::Ustulo(match value { AST::NodeValue::Char(c) => c, _ => 'h'}), id: -1}
+      }
+      _ => panic!("huh?")
     }
   }
   fn evaluate_list(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {

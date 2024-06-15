@@ -30,6 +30,17 @@ pub fn println(arguments: Arguments) -> Proventus {
   Proventus{value: Fructa::Nullus, id: -2}
 }
 
+/*pub fn putStr(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::print(args) => {
+      for i in args {
+        print!("{}", i.value.display());
+      }
+    }
+  }
+
+}*/
+
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
   match arguments.function {
