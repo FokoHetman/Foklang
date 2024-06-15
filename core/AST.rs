@@ -10,7 +10,6 @@ pub enum NodeKind {
   Expression,
   BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
   Stmt,
-  Space,
   Char{value: NodeValue},
   NullLiteral{value: NodeValue},
   List{body: Vec<Box<Node>>},
