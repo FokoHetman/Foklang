@@ -1,4 +1,4 @@
-# FokLang
+# About FokLang
 aka Foko (literally me)'s language inspired by haskell, nix and (in the future) perl. Mostly was inspired to make it because configs (why use universal stuff like json when i can have my own thing) and well... having your own language is,,, kinda cool I think?
 
 
@@ -24,7 +24,7 @@ Upon running shell, you will find yourself in foklang environment:
 ```
 foklang$ 
 ```
-
+### hello world
 alright, time for... hello world I guess?
 ```
 foklang$ println "hello foklang!!!"
@@ -33,6 +33,7 @@ hello foklang!!!
 A bit of terminology:
 * String, as any other type is called it's Latin word: `Filum`, however we're not using it here. <br>
 * String in foklang, just like in haskell, is a list of `Ustulo` (chars, such as: `'h'`). So `"hello"` == `['h'; 'e'; 'l'; 'l'; 'o']`.<br>
+### functions
 <br>good i guess? Let's get to the cool stuff
 ```
 foklang$ let fn x y = x+y
@@ -44,12 +45,14 @@ foklang$ fn 2 4
 6
 ```
 neat, but why not start with variables?
+### variables
 Well, variables are basically "argumentless" functions
 ```
 foklang$ let ScaleOfConfusionNathanObtainsTheMomentIToldHimThat = 642
 foklang$ ScaleOfConfusionNathanObtainsTheMomentIToldHimThat + 5
 647
 ```
+### lists
 alright alright. What else do we have?
 Lists, or if you prefer, `Inventarii`. 
 These are pretty trivial:
@@ -65,6 +68,7 @@ foklang$ get list 3
 4
 ```
 see? Separator (`;`) goes after identifier (otherwise identifier takes everything after it as argument).<br>
+### builtin get
 now, builtin function: `get`. 1st argument is a list (in that case, variable `list`). 2nd argument is index. Index starts from 0, so:
 ```
 foklang$ get list 0
@@ -74,6 +78,7 @@ foklang$ gett list 4
 ```
 etc.
 
+### objects/configs
 Now, the last thing I got to offer you are Objects (or Configs, debatable).
 ```
 foklang$ let var = 5
