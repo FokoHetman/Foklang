@@ -13,6 +13,7 @@ pub enum NodeKind {
   Char{value: NodeValue},
   NullLiteral{value: NodeValue},
   List{body: Vec<Box<Node>>},
+  Bool{value: NodeValue},
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
 }
@@ -21,6 +22,7 @@ pub enum NodeValue {
   Integer(i32),
   String(String),
   Char(char),
+  Bool(bool),
   Nullus,
 }
 
@@ -34,6 +36,7 @@ pub enum Fructa {
   Numerum(i32),
   Ustulo(char),
   Filum(String),
+  Condicio(bool),
   Moenus(/*Node,*/ Vec<Node>, Node),
   BuiltIn(fn(builtins::Arguments) -> Proventus),
   Causor(Vec<(Node,Proventus)>),
@@ -79,6 +82,7 @@ impl Fructa {
           result
         }
       },
+      Fructa::Condicio(b) => b.to_string(),
       Fructa::Ustulo(c) => c.to_string(),
       _ => panic!("display not implemented")
     }

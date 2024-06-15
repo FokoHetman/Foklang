@@ -43,7 +43,16 @@ impl Interpreter {
       AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
       AST::NodeKind::Char{..} => self.evaluate_char(node, env),
+      AST::NodeKind::Bool{..} => self.evaluate_bool(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
+    }
+  }
+  fn evaluate_bool(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
+    match node.kind {
+      AST::NodeKind::Bool{value} => {
+        AST::Proventus{value: AST::Fructa::Condicio(match value {AST::NodeValue::Bool(b) => b, _ => false}), id: -1}
+      }
+      _ => panic!("false && true * 1 _2@4930refdjigbkc")
     }
   }
   fn evaluate_char(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {

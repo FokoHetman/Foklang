@@ -123,6 +123,14 @@ impl Parser {
     let eat = self.eat(tokens);
     let empty_node = Box::<AST::Node>::new(AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}});
     match token {
+      TokenType::Bool => {
+        match eat.tokenvalue {
+          TokenValue::Bool(b) => {
+            AST::Node{kind: AST::NodeKind::Bool{value: AST::NodeValue::Bool(b)}}
+          }
+          _ => panic!("?")
+        }
+      },
       TokenType::Identifier => {
         let mut childs: Vec<Box<AST::Node>> = vec![];
         while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer {
