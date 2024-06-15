@@ -123,20 +123,14 @@ impl Parser {
     let eat = self.eat(tokens);
     let empty_node = Box::<AST::Node>::new(AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}});
     match token {
-      TokenType::Space => {
-        AST::Node {kind: AST::NodeKind::Space}
-      },
       TokenType::Identifier => {
         let mut childs: Vec<Box<AST::Node>> = vec![];
-        while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer ||self.at(tokens).tokentype==TokenType::Space {
+        while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer {
           match self.at(tokens).tokentype {
             TokenType::Identifier => {
               childs.push(Box::new(AST::Node{kind: AST::NodeKind::Identifier{symbol: self.eat(tokens).tokenvalue.to_string(), childs: vec![]}}));
             },
             TokenType::Integer => {
-              childs.push(Box::new(self.parse_expr(tokens)));
-            },
-            TokenType::Space => {
               childs.push(Box::new(self.parse_expr(tokens)));
             },
             _ => {break;}
