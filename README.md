@@ -39,3 +39,6 @@ foklang$ fn 2 4
 6
 ```
 neat
+
+
+--will add more later because lazy asf
