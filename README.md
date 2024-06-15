@@ -25,8 +25,8 @@ foklang$
 
 alright, time for... hello world I guess?
 ```
-foklang$ println "hello world"
-hello world
+foklang$ println "hello foklang!!!"
+hello foklang!!!
 ```
 cool i guess? Let's get to the cool stuff
 ```
@@ -38,7 +38,12 @@ Let's see it in action
 foklang$ fn 2 4
 6
 ```
-neat
-
-
---will add more later because lazy asf
+neat, but why not start with variables?
+Well, variables are basically "argumentless" functions
+```
+foklang$ let ScaleOfConfusionNathanObtainsTheMomentIToldHimThat = 642
+foklang$ ScaleOfConfusionNathanObtainsTheMomentIToldHimThat + 5
+647
+```
+alright alright. What else do we have?
+Objects
