@@ -30,15 +30,15 @@ alright, time for... hello world I guess?
 foklang$ println "hello foklang!!!"
 hello foklang!!!
 ```
-> A bit of terminology:
-> String, as any other type is called it's Latin word: `Filum`, however we're not using it here.
-> String in foklang, just like in rust, is a list of `Ustulo` (chars, such as: `'h'`). So `"hello"` == `['h'; 'e'; 'l'; 'l'; 'o']`.
-good i guess? Let's get to the cool stuff
+A bit of terminology:
+* String, as any other type is called it's Latin word: `Filum`, however we're not using it here. <br>
+* String in foklang, just like in haskell, is a list of `Ustulo` (chars, such as: `'h'`). So `"hello"` == `['h'; 'e'; 'l'; 'l'; 'o']`.<br>
+<br>good i guess? Let's get to the cool stuff
 ```
 foklang$ let fn x y = x+y
 ```
-what could that do? Exactly! It defines a Moenus (function) that takes arguments (x,y), and adds them together.
-Let's see it in action
+what could that do? <br>Exactly! It defines a Moenus (function) that takes arguments (x,y), and adds them together.
+<br>Let's see it in action
 ```
 foklang$ fn 2 4
 6
@@ -64,7 +64,7 @@ foklang$ let list = [1 2 3 4 x; 5]
 foklang$ get list 3
 4
 ```
-see? Separator (`;`) goes after identifier (otherwise identifier takes everything after it as argument).
+see? Separator (`;`) goes after identifier (otherwise identifier takes everything after it as argument).<br>
 now, builtin function: `get`. 1st argument is a list (in that case, variable `list`). 2nd argument is index. Index starts from 0, so:
 ```
 foklang$ get list 0
@@ -80,7 +80,7 @@ foklang$ let var = 5
 foklang$ let config = {enable = true offset = 16 variable = var; powers = 12}
 foklang$
 ```
-Notice how separators work the same way as in lists.
+Notice how separators work the same way as in lists.<br>
 Now that we got ourselves a config, let's use it!
 ```
 foklang$ get config enable
