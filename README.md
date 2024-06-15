@@ -75,4 +75,19 @@ foklang$ gett list 4
 etc.
 
 Now, the last thing I got to offer you are Objects (or Configs, debatable).
-```foklang$ let config = {enable = true, FINISH IT FOKO
+```
+foklang$ let var = 5
+foklang$ let config = {enable = true offset = 16 variable = var; powers = 12}
+foklang$
+```
+Notice how separators work the same way as in lists.
+Now that we got ourselves a config, let's use it!
+```
+foklang$ get config enable
+true
+foklang$ get config variable
+5
+foklang get config powers
+12
+```
+neat. NOW WAIT FOR CONDITIONALS AND LOOPS BECAUSE I STILL DON'T HAVE THEM AAAAAAAAAAAAAAAAAAAAAAAAA
