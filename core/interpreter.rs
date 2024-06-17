@@ -100,36 +100,157 @@ impl Interpreter {
   fn evaluate_binary_expression(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
       AST::NodeKind::BinaryExpression{left: node_left,right: node_right,operator: node_operator} => {
-        let left = match self.evaluate(*node_left, env).value {
+        /*let left = match self.evaluate(*node_left, env).value {
           AST::Fructa::Numerum(i) => i,
           _ => panic!("hi I fucked up yipee!")
         };
         let right = match self.evaluate(*node_right, env).value {
           AST::Fructa::Numerum(i) => i,
           _ => panic!("hi I fucked up big yipee!")
-        };
+        };*/
 
-        if self.error_handler.check_binary_expression(left,right).bool {
+        /*if self.error_handler.check_binary_expression(left,right).bool {
           panic!("[Interpreter Error] Binary Expression: {:#?}", self.error_handler.check_binary_expression(left,right).error_msg);
-        }
-        let result = match node_operator {
-          Operator::Addition => left+right,
-          Operator::Substraction => left-right,
-          Operator::Multiplication => left*right,
-          Operator::Division => {
-            if self.error_handler.check_binary_expression_division(left,right).bool {
-              panic!("[Interpreter Error] Binary Expression Division: {:#?}", 
-                  self.error_handler.check_binary_expression_division(left,right).error_msg);
-            }
-            left/right
+        };*/
+        match node_operator {
+          Operator::Addition => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Numerum(i+i2), id: -1}
+                }
+                _ => panic!("Addition of l and r not implemented"),
+              }
+            },
+            _ => panic!("Addition of l and r not implemented"),
           },
-          Operator::Exponentiation => {
-            left.pow(right.try_into().unwrap())
-          }
-          _ => panic!("[Interpreter Error] Unknown Operator: {:#?}", node_operator)
-        };
 
-        AST::Proventus{value: AST::Fructa::Numerum(result), id: -1}
+
+          Operator::Substraction => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Numerum(i-i2), id: -1}
+                }
+                _ => panic!("Substraction imbluedabudidabudaj")
+              }
+            },
+            _ => panic!("Substraction of l and r not implemented"),
+          },
+
+
+          Operator::Multiplication => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Numerum(i*i2), id: -1}
+                }
+                _ => panic!("Multiplication efsduixcvjjuodvcf")
+              }
+            },
+            _ => panic!("Multiplication of l and r not implemented"),
+          },
+          Operator::Division => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  if i2==0 {//error handle it i beg
+                    panic!("Division by zero") 
+                  }
+                  AST::Proventus{value: AST::Fructa::Numerum(i/i2), id: -1}
+                }
+                _ => panic!("Division cyka blyat")
+              }
+            },
+            _ => panic!("Division of l and r not implemented")
+          },
+          Operator::Exponentiation => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Numerum(i.pow(i2.try_into().unwrap())), id: -1}
+                }
+                _ => panic!("Exponentiation stalinium")
+              }
+            }
+            _ => panic!("Exponentiation of l and r not implemented")
+          },
+          Operator::Comparision => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Condicio(i==i2), id: -1}
+                }
+                _  => panic!("huh?")
+              }
+            },
+            AST::Fructa::Inventarii(li) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Inventarii(li2) => {
+                  for i in 0..li.len() {
+                    if li2[i as usize]!=li[i as usize] {
+                      return AST::Proventus{value: AST::Fructa::Condicio(false), id: -1}
+                    }
+                  }
+                  AST::Proventus{value: AST::Fructa::Condicio(true), id: -1}
+                }
+                _ => panic!("death")
+              }
+            },
+            _ => panic!("Comparision died")
+          },
+          Operator::Greater => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Condicio(i>i2), id: -1}
+                },
+                _ => panic!("heat deth of the unvirser!")
+              }
+            }
+            _ => panic!("heat deth of teh univers the sequel!")
+          },
+          Operator::Lower => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Condicio(i<i2), id: -1}
+                },
+                _ => panic!("gravitational wave did it not me I swear")
+              }
+            }
+            _ => panic!("another gravitational wave!!!")
+          },
+
+          Operator::GreaterEqual => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Condicio(i>=i2), id: -1}
+                },
+                _ => panic!("heat deth of the unvirser!")
+              }
+            }
+            _ => panic!("heat deth of teh univers the sequel!")
+          },
+
+          Operator::LowerEqual => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  AST::Proventus{value: AST::Fructa::Condicio(i<=i2), id: -1}
+                },
+                _ => panic!("gravitational wave did it not me I swear")
+              }
+            }
+            _ => panic!("another gravitational wave!!!")
+          },
+
+
+          _ => panic!("[Interpreter Error] Unknown Operator: {:#?}", node_operator)
+        }
+
+        //AST::Proventus{value: AST::Fructa::Numerum(result), id: -1}
       }
       _ => panic!("[Interpreter Error] Tried to evaluate non-BinaryExpression Node as BinaryExpression, {:#?}", node)
     }

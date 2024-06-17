@@ -2,7 +2,7 @@ use core::tokenizer::{Operator};
 use core::builtins;
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum NodeKind {
   Program {body: Vec<Box<Node>>, id: i32},
   Identifier {symbol: String, childs: Vec<Box<Node>>},
@@ -17,7 +17,7 @@ pub enum NodeKind {
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum NodeValue {
   Integer(i32),
   String(String),
@@ -26,11 +26,11 @@ pub enum NodeValue {
   Nullus,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Node {
   pub kind: NodeKind,
 }
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub enum Fructa {
   Nullus,
   Numerum(i32),
@@ -42,7 +42,7 @@ pub enum Fructa {
   Causor(Vec<(Node,Proventus)>),
   Inventarii(Vec<Proventus>),
 }
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct Proventus {
   pub value: Fructa,
   pub id: i32,

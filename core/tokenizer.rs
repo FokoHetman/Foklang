@@ -10,6 +10,16 @@ pub enum Operator {
   Division,
   Exponentiation,
   Equal,
+  
+  RightArrow,
+  LeftArrow,
+
+  Comparision,
+
+  Greater,
+  Lower,
+  GreaterEqual,
+  LowerEqual,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenValue {
@@ -99,13 +109,29 @@ impl Tokenizer {
           tokens.push(Token{tokentype: TokenType::CloseParen, tokenvalue: TokenValue::Nullus});
         },
         "=" => {
-          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Equal)});
+          match list_input[1] {
+            "=" => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Comparision)});
+            },
+            _ => {
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Equal)});
+            }
+          }
         },
         "+" => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Addition)});
         },
         "-" => {
-          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Substraction)});
+          match list_input[1] {
+            ">" => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::RightArrow)});
+            },
+            _ => {
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Substraction)});
+            }
+          }
         },
         "*" => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Multiplication)});
@@ -136,6 +162,33 @@ impl Tokenizer {
             list_input.remove(0);
           }
           tokens.push(Token{tokentype: TokenType::String, tokenvalue: TokenValue::String(deval)});
+        },
+        ">" => {
+
+          match list_input[1] {
+            "=" => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::GreaterEqual)});
+            },
+            _ => {
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Greater)});
+            }
+          }
+        },
+        "<" => {
+          match list_input[1] {
+            "=" => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::LowerEqual)});
+            },
+            "-" => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::LeftArrow)});
+            },
+            _ => {
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Lower)});
+            }
+          }
         },
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());

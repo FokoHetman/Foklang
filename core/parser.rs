@@ -49,7 +49,23 @@ impl Parser {
     }
   }
   pub fn parse_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
-    self.parse_additive_expr(tokens)
+    let mut left = self.parse_additive_expr(tokens);
+
+    while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Comparision) ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Greater) || 
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower) ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::GreaterEqual) ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual) {
+      left = AST::Node{kind: AST::NodeKind::BinaryExpression{
+        left: Box::new(left),
+        operator: match self.eat(tokens).tokenvalue {
+          TokenValue::Operator(o) => o,
+          _ => panic!("A")
+        },
+        right: Box::new(self.parse_additive_expr(tokens)),
+      }};
+    }
+    return left
 
   }
   pub fn parse_additive_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
@@ -115,6 +131,24 @@ impl Parser {
 
       //self.eatExpectValue(TokenValue::Operator(Operator::Equal), "expected equal sign".to_string(), tokens);
       println!("FUNCTINO: {:#?}, {:#?}", function_id, args);
+    }
+    return left
+  }
+  pub fn parse_boolean_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
+    let mut left = self.parse_primary_expr(tokens);
+    while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Comparision) ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Greater) || 
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower) ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::GreaterEqual) ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual) {
+      left = AST::Node{kind: AST::NodeKind::BinaryExpression{
+        left: Box::new(left),
+        operator: match self.eat(tokens).tokenvalue {
+          TokenValue::Operator(o) => o,
+          _ => panic!("A")
+        },
+        right: Box::new(self.parse_primary_expr(tokens)),
+      }};
     }
     return left
   }*/
