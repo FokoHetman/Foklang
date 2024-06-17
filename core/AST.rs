@@ -62,7 +62,7 @@ impl Fructa {
       Fructa::Filum(s) => s.to_string(),
       Fructa::Causor(b) => format!("{:#?}", b),
       Fructa::Inventarii(b) => {
-        let mut result = String::new();
+        let mut result = String::from("[");
         let mut string = String::new();
         let mut stringlist = true;
 
@@ -74,12 +74,12 @@ impl Fructa {
               String::new()
             }
           };
-          result+=&(i.value.display()+";")
+          result+=&(i.value.display()+" ")
         }
         if stringlist {
           string
         } else {
-          result
+          result+"]"
         }
       },
       Fructa::Condicio(b) => b.to_string(),

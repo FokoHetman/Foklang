@@ -20,6 +20,8 @@ pub enum Operator {
   Lower,
   GreaterEqual,
   LowerEqual,
+
+  DoubleDot,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenValue {
@@ -107,6 +109,15 @@ impl Tokenizer {
         },
         ")" => {
           tokens.push(Token{tokentype: TokenType::CloseParen, tokenvalue: TokenValue::Nullus});
+        },
+        "." => {
+          match list_input[1] {
+            "." => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DoubleDot)});
+            }
+            _ => {}
+          }
         },
         "=" => {
           match list_input[1] {

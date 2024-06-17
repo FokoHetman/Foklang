@@ -68,7 +68,18 @@ impl Interpreter {
       AST::NodeKind::List{body} => {
         let mut args: Vec<AST::Proventus> = vec![];
         for i in body {
-          args.push(self.evaluate(*i.clone(), env));
+          if self.evaluate(*i.clone(), env).id==112 {
+            match self.evaluate(*i.clone(), env).value {
+              AST::Fructa::Inventarii(inv) => {
+                for x in inv {
+                  args.push(x);
+                }
+              }
+              _ => panic!("112 - toParent call for non-Inventarii object")
+            }
+          } else {
+            args.push(self.evaluate(*i.clone(), env));
+          }
         }
         AST::Proventus{value: AST::Fructa::Inventarii(args), id: -1}
         
@@ -245,7 +256,27 @@ impl Interpreter {
             }
             _ => panic!("another gravitational wave!!!")
           },
-
+          Operator::DoubleDot => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  let mut li: Vec<AST::Proventus> = vec![];
+                  if i>i2 {
+                    for x in (i2..i+1).rev() {
+                      li.push(AST::Proventus{value: AST::Fructa::Numerum(x), id: -1});
+                    }
+                  } else {
+                    for x in i..i2+1 {
+                      li.push(AST::Proventus{value: AST::Fructa::Numerum(x), id: -1});
+                    }
+                  }
+                  AST::Proventus{value: AST::Fructa::Inventarii(li), id: 112}
+                }
+                _ => panic!("gravitational wave happen godmdmdandd")
+              }
+            }
+            _ => panic!("ranges not implemented for non-Numerum values")
+          },
 
           _ => panic!("[Interpreter Error] Unknown Operator: {:#?}", node_operator)
         }

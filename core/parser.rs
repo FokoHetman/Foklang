@@ -51,11 +51,12 @@ impl Parser {
   pub fn parse_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
     let mut left = self.parse_additive_expr(tokens);
 
-    while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Comparision) ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Greater) || 
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower) ||
+    while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Comparision)  ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Greater)      || 
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower)        ||
           self.at(tokens).tokenvalue==TokenValue::Operator(Operator::GreaterEqual) ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual) {
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual)   ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::DoubleDot) {
       left = AST::Node{kind: AST::NodeKind::BinaryExpression{
         left: Box::new(left),
         operator: match self.eat(tokens).tokenvalue {
