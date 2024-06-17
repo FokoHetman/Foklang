@@ -20,6 +20,8 @@ rustc shell.rs
 > *requires git and rustc
 
 # Usage
+
+## Quick Introduction
 Upon running shell, you will find yourself in foklang environment:
 ```
 foklang$ 
@@ -48,8 +50,8 @@ neat, but why not start with variables?
 ### variables
 Well, variables are basically "argumentless" functions
 ```
-foklang$ let ScaleOfConfusionNathanObtainsTheMomentIToldHimThat = 642
-foklang$ ScaleOfConfusionNathanObtainsTheMomentIToldHimThat + 5
+foklang$ let NathansConfusion = 642
+foklang$ NathansConfusion + 5
 647
 ```
 ### lists
@@ -64,19 +66,11 @@ huh? `;` is a default separator, however (unless you use identifiers, `x`, `vari
 ```
 foklang$ let x = 5
 foklang$ let list = [1 2 3 4 x; 5]
-foklang$ get list 3
-4
+foklang$ list
+1;2;3;4;5;5;
 ```
 see? Separator (`;`) goes after identifier (otherwise identifier takes everything after it as argument).<br>
-### builtin get
-now, builtin function: `get`. 1st argument is a list (in that case, variable `list`). 2nd argument is index. Index starts from 0, so:
-```
-foklang$ get list 0
-1
-foklang$ gett list 4
-5
-```
-etc.
+
 
 ### objects/configs
 Now, the last thing I got to offer you are Objects (or Configs, debatable).
@@ -95,4 +89,27 @@ foklang$ get config variable
 foklang get config powers
 12
 ```
+
+
+
+## BuiltIn Functions
+
+### builtin get
+now, builtin function: `get`. 1st argument is a list or object (in 1st case, variable `list`, in 2nd variable `config`). 2nd argument is index or key. Index starts from 0, so:
+```
+foklang$ let list = [1 4 9 16 25 36]
+foklang$ get list 3
+4
+foklang$ get list 0
+1
+foklang$ get list 4
+5
+foklang$ let config = {enable = true variable=12 multiplier = 17}
+foklang$ get config variable
+12
+foklang$ get config multiplier + 3
+20
+```
+etc.
+
 neat. NOW WAIT FOR CONDITIONALS AND LOOPS BECAUSE I STILL DON'T HAVE THEM AAAAAAAAAAAAAAAAAAAAAAAAA
