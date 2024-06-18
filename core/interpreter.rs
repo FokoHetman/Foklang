@@ -6,7 +6,7 @@ use core::env::Environment;
 use core::builtins;
 
 
-#[derive(Clone)]
+#[derive(Debug,Clone)]
 pub struct Interpreter {pub error_handler:ErrorHandler}
 
 impl Interpreter {
@@ -349,6 +349,9 @@ impl Interpreter {
           fargs = builtins::FunctionArgs::print(n_args);
 
         }
+        else if f==builtins::fmap {
+          fargs = builtins::FunctionArgs::fmap(args_vec[0].clone(), self.evaluate(args_vec[1].clone(), env), env.clone(), self.clone());
+        }
         let args = builtins::Arguments{function: fargs};
         f(args)
           //panic!("builtin")
@@ -357,6 +360,7 @@ impl Interpreter {
 
         }*/
       }
+      AST::Fructa::Inventarii(i) => AST::Proventus {value: AST::Fructa::Inventarii(i), id: -1},
       AST::Fructa::Numerum(i) => AST::Proventus {value: AST::Fructa::Numerum(i), id: -1},
       _ => panic!("damn")
     }

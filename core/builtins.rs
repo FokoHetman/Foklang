@@ -1,5 +1,8 @@
 use core::AST::{*};
 use core::env::Environment;
+use core::interpreter::Interpreter;
+
+
 
 pub fn print(arguments: Arguments) -> Proventus {
   match arguments.function {
@@ -30,16 +33,48 @@ pub fn println(arguments: Arguments) -> Proventus {
   Proventus{value: Fructa::Nullus, id: -2}
 }
 
-/*pub fn putStr(arguments: Arguments) -> Proventus {
+pub fn fmap(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::print(args) => {
-      for i in args {
-        print!("{}", i.value.display());
+    FunctionArgs::fmap(fun, list, env, mut interpreter) => {
+      match fun.kind {
+        NodeKind::Identifier{symbol, ..} => {
+          match list.value {
+            Fructa::Inventarii(inv) => {
+              let mut result: Vec<Proventus> = vec![];
+              for i in inv {
+                match env.get(Node{kind: NodeKind::Identifier{symbol: symbol.clone(), childs: vec![]}}).value {
+                  Fructa::Moenus(args, statement) => {
+                    let mut function_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+                    if args.len()>1 {
+                      match i.value {
+                        Fructa::Inventarii(body) => {
+                          for x in 0..args.len() {
+                            function_env.declare(args[x].clone(), body[x].clone());
+                          }
+                        }
+                        _ => panic!("iterating not implemented for whatever you tried lmao")
+                      }
+                    } else {
+                      function_env.declare(args[0].clone(), i);
+                    }
+
+                    result.push(interpreter.evaluate(statement, &mut function_env));
+                  }
+                  _ => panic!("supra nova")
+                }
+              }
+              return Proventus{value: Fructa::Inventarii(result), id: -1};
+            }
+            _ => panic!("not list list")
+          }
+        }
+        _ => panic!("explosiod gbfdrsupra")
       }
     }
+    _ => panic!("head")
   }
-
-}*/
+  //panic!("A")
+}
 
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
@@ -80,6 +115,13 @@ pub fn get(arguments: Arguments) -> Proventus {
   returnd
 }
 
+pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environment) {
+  env.declare(Node{kind: NodeKind::Identifier {symbol: id, childs:vec![]}},
+      Proventus{value: Fructa::BuiltIn(
+        fun
+      ), id:-2});
+}
+
 pub fn declare_builtins(env: &mut Environment) {
   env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("get"), childs: vec![]}},
       Proventus{value: Fructa::BuiltIn(
@@ -93,6 +135,7 @@ pub fn declare_builtins(env: &mut Environment) {
       Proventus{value: Fructa::BuiltIn(
         println
       ), id:-2});
+  declare_fn(String::from("fmap"), fmap, env);
 }
 
 
@@ -105,5 +148,6 @@ pub struct Arguments {
 pub enum FunctionArgs {
   get(Proventus, Proventus),
   print(Vec<Proventus>),
+  fmap(Node, Proventus, Environment, Interpreter),
   zerum(),
 }

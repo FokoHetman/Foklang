@@ -168,12 +168,16 @@ impl Parser {
       },
       TokenType::Identifier => {
         let mut childs: Vec<Box<AST::Node>> = vec![];
-        while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer {
+        while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer
+                || self.at(tokens).tokentype==TokenType::OpenSParen {
           match self.at(tokens).tokentype {
             TokenType::Identifier => {
               childs.push(Box::new(AST::Node{kind: AST::NodeKind::Identifier{symbol: self.eat(tokens).tokenvalue.to_string(), childs: vec![]}}));
             },
             TokenType::Integer => {
+              childs.push(Box::new(self.parse_expr(tokens)));
+            },
+            TokenType::OpenSParen => {
               childs.push(Box::new(self.parse_expr(tokens)));
             },
             _ => {break;}
