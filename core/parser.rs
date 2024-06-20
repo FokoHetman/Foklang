@@ -63,7 +63,7 @@ impl Parser {
           TokenValue::Operator(o) => o,
           _ => panic!("A")
         },
-        right: Box::new(self.parse_additive_expr(tokens)),
+        right: Box::new(match tokens[0].tokenvalue {TokenValue::Nullus => AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}}, _ => self.parse_additive_expr(tokens)}),
       }};
     }
     return left

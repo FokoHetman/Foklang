@@ -271,7 +271,14 @@ impl Interpreter {
                     }
                   }
                   AST::Proventus{value: AST::Fructa::Inventarii(li), id: 112}
-                }
+                },
+                AST::Fructa::Nullus =>  {
+                  let mut li: Vec<AST::Proventus> = vec![];
+                  for x in (i..i32::MAX) {
+                    li.push(AST::Proventus{value: AST::Fructa::Numerum(x), id: -1});
+                  }
+                  AST::Proventus{value: AST::Fructa::Inventarii(li), id: 112}
+                },
                 _ => panic!("gravitational wave happen godmdmdandd")
               }
             }
@@ -351,6 +358,13 @@ impl Interpreter {
         }
         else if f==builtins::fmap {
           fargs = builtins::FunctionArgs::fmap(args_vec[0].clone(), self.evaluate(args_vec[1].clone(), env), env.clone(), self.clone());
+        }
+        else if f==builtins::join {
+          let mut n_args: Vec<AST::Proventus> = vec![];
+          for i in args_vec {
+            n_args.push(self.evaluate(i, env));
+          }
+          fargs = builtins::FunctionArgs::join(n_args);
         }
         let args = builtins::Arguments{function: fargs};
         f(args)

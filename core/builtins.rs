@@ -115,6 +115,33 @@ pub fn get(arguments: Arguments) -> Proventus {
   returnd
 }
 
+
+pub fn join(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::join(mut lists) => {
+      let mut result = lists[0].clone();
+      lists.remove(0);
+      match result.value {
+        Fructa::Inventarii(ref mut main) => {
+          for li in lists {
+            match li.value {
+              Fructa::Inventarii(li1) => {
+                main.append(&mut li1.clone());
+              },
+              _ => panic!("ar")
+            }
+          }
+        }
+        _ => panic!("ra")
+      }
+      result
+    }
+    _  => panic!("??????")
+  }
+}
+
+
+
 pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environment) {
   env.declare(Node{kind: NodeKind::Identifier {symbol: id, childs:vec![]}},
       Proventus{value: Fructa::BuiltIn(
@@ -136,6 +163,7 @@ pub fn declare_builtins(env: &mut Environment) {
         println
       ), id:-2});
   declare_fn(String::from("fmap"), fmap, env);
+  declare_fn(String::from("join"), join, env);
 }
 
 
@@ -150,4 +178,5 @@ pub enum FunctionArgs {
   print(Vec<Proventus>),
   fmap(Node, Proventus, Environment, Interpreter),
   zerum(),
+  join(Vec<Proventus>),
 }
