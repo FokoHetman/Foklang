@@ -294,32 +294,47 @@ impl Interpreter {
     }
   }
   fn evaluate_identifier(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
-    match env.get(node.clone()).value {
-      AST::Fructa::Moenus(args, statement) => {
-        let mut function_env = Environment{parent: Some(Box::new(env.clone())), error_handler: self.error_handler, ..Default::default()};
+    let mut result = AST::Proventus{value: AST::Fructa::Nullus, id: -2};
+    //println!("{:#?}", env.get(node.clone()));
+    'ma: for variation in env.get(node.clone()) {
+      //println!("{:#?}", variation);
+      match variation.value {
+        AST::Fructa::Moenus(args, statement) => {
+          let mut function_env = Environment{parent: Some(Box::new(env.clone())), error_handler: self.error_handler, ..Default::default()};
 
-        match node.kind {
-          AST::NodeKind::Identifier{symbol, childs} => {
-            for i in 0..args.len() {
-              //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
-              function_env.declare(args[i].clone(), self.evaluate(*childs[i].clone(), env));
-              //self.evaluate();
-            //get further nodes, and assing them to real arguments (eg. x = 5)
+          match node.kind {
+            AST::NodeKind::Identifier{ref symbol, ref childs} => {
+              for i in 0..args.len() {
+                //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
+                let userdata = match self.evaluate(*childs[i].clone(), env).value {AST::Fructa::Numerum(i) => i, _ => 0};
+                //println!("{:#?} != {:#?} => {:#?}", args[i].clone(), self.evaluate(*childs[i].clone(), env), match args[i].clone().kind { AST::NodeKind::NumericLiteral{value:i, ..} => match i { AST::NodeValue::Integer(i) => i, _ => userdata}, _ => userdata} != userdata);
+                if match args[i].clone().kind { AST::NodeKind::NumericLiteral{value: i, ..} => match i { AST::NodeValue::Integer(i) => i, _ => userdata}, _ => userdata} != userdata {
+                  //println!("continuing..");
+                  continue 'ma
+                }
+                match args[i].clone().kind {
+                  AST::NodeKind::Identifier{..} => {function_env.declare(args[i].clone(), self.evaluate(*childs[i].clone(), env));},
+                  AST::NodeKind::NumericLiteral{value,..} =>  {},
+                  _ => {}
+                };
+                //self.evaluate();
+              //get further nodes, and assing them to real arguments (eg. x = 5)
+              }
             }
+            _ => {}
           }
-          _ => {}
+          env.current_node+=args.len() as i32;
+          //println!("FUNCTION_ENV: {:#?}", function_env);
+          result = self.evaluate(statement.clone(), &mut function_env);
+          //println!("R, STATEMENT: {:#?}, {:#?}", result, statement);
+          break
+          //evaluate the statement, with defined x and y
         }
-        env.current_node+=args.len() as i32;
-        //println!("FUNCTION_ENV: {:#?}", function_env);
-        self.evaluate(statement, &mut function_env)
-        //evaluate the statement, with defined x and y
-
-      }
       AST::Fructa::BuiltIn(f) => {
         //if f==core::builtins::get {
         let mut args_vec: Vec<AST::Node> = vec![];
         match node.kind {
-          AST::NodeKind::Identifier{symbol, childs} => {
+          AST::NodeKind::Identifier{ref symbol, ref childs} => {
             for i in childs {
               args_vec.push(*i.clone());
             }
@@ -367,17 +382,19 @@ impl Interpreter {
           fargs = builtins::FunctionArgs::join(n_args);
         }
         let args = builtins::Arguments{function: fargs};
-        f(args)
+        result = f(args)
           //panic!("builtin")
         /*} else if f==core::builtins::print {
           
 
         }*/
       }
-      AST::Fructa::Inventarii(i) => AST::Proventus {value: AST::Fructa::Inventarii(i), id: -1},
-      AST::Fructa::Numerum(i) => AST::Proventus {value: AST::Fructa::Numerum(i), id: -1},
+      AST::Fructa::Inventarii(i) => { result = AST::Proventus {value: AST::Fructa::Inventarii(i), id: -1}},
+      AST::Fructa::Numerum(i) => { result = AST::Proventus {value: AST::Fructa::Numerum(i), id: -1}},
       _ => panic!("damn")
+      }
     }
+    result
   }
   fn evaluate_object(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {

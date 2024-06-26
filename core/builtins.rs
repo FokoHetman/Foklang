@@ -42,7 +42,7 @@ pub fn fmap(arguments: Arguments) -> Proventus {
             Fructa::Inventarii(inv) => {
               let mut result: Vec<Proventus> = vec![];
               for i in inv {
-                match env.get(Node{kind: NodeKind::Identifier{symbol: symbol.clone(), childs: vec![]}}).value {
+                match &env.get(Node{kind: NodeKind::Identifier{symbol: symbol.clone(), childs: vec![]}}).into_iter().rev().collect::<Vec<Proventus>>()[0].value {
                   Fructa::Moenus(args, statement) => {
                     let mut function_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
                     if args.len()>1 {
@@ -58,7 +58,7 @@ pub fn fmap(arguments: Arguments) -> Proventus {
                       function_env.declare(args[0].clone(), i);
                     }
 
-                    result.push(interpreter.evaluate(statement, &mut function_env));
+                    result.push(interpreter.evaluate(statement.clone(), &mut function_env));
                   }
                   _ => panic!("supra nova")
                 }
