@@ -192,6 +192,9 @@ impl Interpreter {
                 AST::Fructa::Numerum(i2) => {
                   AST::Proventus{value: AST::Fructa::Condicio(i==i2), id: -1}
                 }
+                AST::Fructa::Condicio(b) => {
+                  AST::Proventus{value: AST::Fructa::Condicio(b == (i!=0)), id: -1}
+                }
                 _  => panic!("huh?")
               }
             },
@@ -206,6 +209,13 @@ impl Interpreter {
                   AST::Proventus{value: AST::Fructa::Condicio(true), id: -1}
                 }
                 _ => panic!("death")
+              }
+            },
+            AST::Fructa::Condicio(b) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Nullus => AST::Proventus{value: AST::Fructa::Condicio(false), id: -1},
+                AST::Fructa::Condicio(b2) => AST::Proventus{value: AST::Fructa::Condicio(b==b2), id: -1},
+                _ => AST::Proventus{value: AST::Fructa::Condicio(b), id: -1},
               }
             },
             _ => panic!("Comparision died")
@@ -295,7 +305,7 @@ impl Interpreter {
   }
   fn evaluate_identifier(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     let mut result = AST::Proventus{value: AST::Fructa::Nullus, id: -2};
-    println!("{:#?}", env.clone());
+    //println!("{:#?}", env.clone());
     //println!("{:#?}", env.get(node.clone()));
     'ma: for variation in env.get(node.clone()) {
       //println!("{:#?}", variation);
@@ -395,6 +405,7 @@ impl Interpreter {
       }
       AST::Fructa::Inventarii(i) => { result = AST::Proventus {value: AST::Fructa::Inventarii(i), id: -1}},
       AST::Fructa::Numerum(i) => { result = AST::Proventus {value: AST::Fructa::Numerum(i), id: -1}},
+      AST::Fructa::Condicio(i) => { result = AST::Proventus {value: AST::Fructa::Condicio(i), id: -1}},
       _ => panic!("damn")
       }
     }

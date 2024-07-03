@@ -44,7 +44,19 @@ impl Parser {
 
   pub fn parse_stmt(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
     match self.at(tokens).tokentype {
-      //TokenType::Let => self.parse_var_declaration()
+      TokenType::Let => {
+        let _ = self.eat(tokens);
+        let function_id = self.parse_expr(tokens);
+        /*let mut args = Vec::<Box<AST::Node>>::new();
+        while self.at(tokens).tokentype==TokenType::Identifier {
+          args.push(Box::new(self.parse_expr(tokens)));
+        }*/
+        self.eatExpectValue(TokenValue::Operator(Operator::Equal), "expected =".to_string(), tokens);
+        let statement = self.parse_expr(tokens);
+        //println!("FUNCTION PARS:  {:#?}, {:#?}, {:#?}",function_id,args, statement);
+        return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
+        //panic!("impl a Function here");
+      }
       _ => self.parse_expr(tokens)
     }
   }
@@ -169,7 +181,7 @@ impl Parser {
       TokenType::Identifier => {
         let mut childs: Vec<Box<AST::Node>> = vec![];
         while self.at(tokens).tokentype==TokenType::Identifier ||  self.at(tokens).tokentype==TokenType::Integer
-                || self.at(tokens).tokentype==TokenType::OpenSParen {
+                || self.at(tokens).tokentype==TokenType::OpenSParen || self.at(tokens).tokentype==TokenType::Bool || self.at(tokens).tokentype==TokenType::OpenParen {
           match self.at(tokens).tokentype {
             TokenType::Identifier => {
               childs.push(Box::new(AST::Node{kind: AST::NodeKind::Identifier{symbol: self.eat(tokens).tokenvalue.to_string(), childs: vec![]}}));
@@ -181,7 +193,7 @@ impl Parser {
             TokenType::OpenSParen => {
               childs.push(Box::new(self.parse_expr(tokens)));
             },*/
-            _ => {childs.push(Box::new(self.parse_expr(tokens)));},
+            _ => {childs.push(Box::new(self.parse_additive_expr(tokens)));},
             //_ => {break;}
           }
         }
@@ -258,18 +270,7 @@ impl Parser {
 
         return AST::Node{kind: AST::NodeKind::List {body: cvec}}
       },
-      TokenType::Let => {
-          let function_id = self.parse_expr(tokens);
-          /*let mut args = Vec::<Box<AST::Node>>::new();
-          while self.at(tokens).tokentype==TokenType::Identifier {
-            args.push(Box::new(self.parse_expr(tokens)));
-          }*/
-          self.eatExpectValue(TokenValue::Operator(Operator::Equal), "expected =".to_string(), tokens);
-          let statement = self.parse_expr(tokens);
-          //println!("FUNCTION PARS:  {:#?}, {:#?}, {:#?}",function_id,args, statement);
-        return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
-        //panic!("impl a Function here");
-      }
+      
       TokenType::SemiColon => {
         self.parse_expr(tokens)
       }
