@@ -295,6 +295,7 @@ impl Interpreter {
   }
   fn evaluate_identifier(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     let mut result = AST::Proventus{value: AST::Fructa::Nullus, id: -2};
+    println!("{:#?}", env.clone());
     //println!("{:#?}", env.get(node.clone()));
     'ma: for variation in env.get(node.clone()) {
       //println!("{:#?}", variation);
@@ -380,6 +381,9 @@ impl Interpreter {
             n_args.push(self.evaluate(i, env));
           }
           fargs = builtins::FunctionArgs::join(n_args);
+        }
+        else if f==builtins::returnfn {
+           fargs = builtins::FunctionArgs::returnfn(self.evaluate(args_vec[0].clone(), env));
         }
         let args = builtins::Arguments{function: fargs};
         result = f(args)

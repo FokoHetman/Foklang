@@ -21,6 +21,14 @@ pub fn print(arguments: Arguments) -> Proventus {
   Proventus{value: Fructa::Nullus, id: -2}
 }
 
+pub fn returnfn(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::returnfn(value) => {
+      return value
+    },
+    _ => panic!("dumbass interpreter")
+  }
+}
 pub fn println(arguments: Arguments) -> Proventus {
   match arguments.function {
     FunctionArgs::print(args) => {
@@ -164,6 +172,7 @@ pub fn declare_builtins(env: &mut Environment) {
       ), id:-2});
   declare_fn(String::from("fmap"), fmap, env);
   declare_fn(String::from("join"), join, env);
+  declare_fn(String::from("return"), returnfn, env);
 }
 
 
@@ -174,6 +183,8 @@ pub struct Arguments {
 }
 #[derive(Debug)]
 pub enum FunctionArgs {
+  returnfn(Proventus),
+
   get(Proventus, Proventus),
   print(Vec<Proventus>),
   fmap(Node, Proventus, Environment, Interpreter),
