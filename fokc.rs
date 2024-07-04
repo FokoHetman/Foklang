@@ -4,6 +4,7 @@ use std::{
   io::{Write},
   fs,
   env,
+  process::Command,
 };
 
 fn main() {
@@ -36,10 +37,14 @@ fn main() {
   if args.len()>3 {
     if args[2].clone()=="-o".to_string() {
       fs::write(args[3].clone(), compiled_input).unwrap();
+      let _ = Command::new("sh").arg(format!("nasm -f elf64 {}", args[3].clone())).output().expect("nasm assembly elf64 failure");
+        let _ = Command::new("sh").arg(format!("ld {} -o {}", args[3].clone().replace(".asm", ".o"), args[3].clone())).output().expect("linker failure");
     }
   }else {
     fs::write(args[1].clone().replace(".fok", ".asm"), compiled_input).unwrap();
     println!("Saving to {}", args[1].clone().replace(".fok", ".asm"));
+    let _ = Command::new("sh").arg(format!("nasm -f elf64 {}", args[1].clone().replace(".fok", ".asm"))).output().expect("nasm assembly elf64 failure");
+    let _ = Command::new("sh").arg(format!("ld {} -o {}", args[1].clone().replace(".fok", ".o"), args[1].clone().replace(".fok", ""))).output().expect("linker failure");
   }
   //core::builtins::println(core::builtins::Arguments{function: core::builtins::FunctionArgs::print(vec![compiled_input])});
 }
