@@ -62,12 +62,7 @@ fn mul_string(times: i32, string: String) -> String {
   }
   result
 }
-fn extract_value(a: AST::Node) -> i32 {
-  match a.kind {
-    AST::NodeKind::NumericLiteral{value} => match value { AST::NodeValue::Integer(i) => i, _ => panic!("gwuh2") },
-    _ => panic!("gwuh")
-  }
-}
+
 
 pub struct Compiler {pub stack_size: i32}
 
@@ -95,7 +90,7 @@ impl Compiler {
     match node.kind {
 
       AST::NodeKind::BinaryExpression{left,right,operator,..} => 
-        ANode{kind: ANodeKind::BinaryExpression(Box::new(ANode{kind: ANodeKind::NumericLiteral(extract_value(*left)), id:-1}), Box::new(ANode{id: -1, kind: ANodeKind::NumericLiteral(extract_value(*right))}), operator), id: -1},
+        ANode{kind: ANodeKind::BinaryExpression(Box::new(self.transform(*left, env)), Box::new(self.transform(*right, env)), operator), id: -1},
 
 
       AST::NodeKind::NumericLiteral{value} =>
@@ -182,9 +177,10 @@ impl Compiler {
   }
   pub fn parse_node(&mut self, node: ANode, current: &mut String, indent: i32, env: &mut Environment) -> String {
     let ev_indent = mul_string(indent, String::from(" "));
+    //println!("\n\n{:#?}\n```{}```\n\n", node, current);
     match node.kind {
       ANodeKind::NumericLiteral(value) => {
-        format!("{ev_indent}mov rdi, {}", value.to_string())
+        format!("{ev_indent}mov rax, {}", value.to_string())
       },
 
 
@@ -192,12 +188,12 @@ impl Compiler {
         //println!("{:#?}", env);
         let location = env.get(identifier);
         //panic!("{:#?}", location)
-        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rdi", 8*(self.stack_size-location[0].id-1)) //tODO - find place in stack of identifier (dw, in rust not assembly)
+        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rax", 8*(self.stack_size-location[0].id-1))
       }
       ANodeKind::BuiltIn(fun) => {
         match fun {
           AFunctions::returnfn(value) => 
-              format!("{ev_indent}mov rax, 60\n{}\n{ev_indent}syscall\n", self.parse_node(*value, current, indent, env))
+              format!("{}\n{ev_indent}push rax\n{ev_indent}pop rdi\n{ev_indent}mov rax, 60\n{ev_indent}syscall\n", self.parse_node(*value, current, indent, env))
         }
       },
       ANodeKind::FunctionDeclaration(id, statement) => {
@@ -210,28 +206,21 @@ impl Compiler {
 
 
         
-        format!("{ev_indent}call {raw}\n{ev_indent}push rdi\n")
+        format!("{ev_indent}call {raw}\n{ev_indent}push rax\n")
       }
-      /*ANodeKind::BinaryExpression(left,right,operator) => {
+      ANodeKind::BinaryExpression(left,right,operator) => {
         match operator {
-          Operator::Addition => {
-            format!("mov rdi, {}\nmov rdx, {}\nadd rdi, rdx\n", self.parse_node(*left), self.parse_node(*right))
-          },
-          Operator::Substraction => {
-            format!("sub {}, {}", self.parse_node(*left), self.parse_node(*right))
-          },
-          Operator::Multiplication => {
-            format!("mul {}, {}", self.parse_node(*left), self.parse_node(*right))
-          },
-          Operator::Division => {
-            format!("div {}, {}", self.parse_node(*left), self.parse_node(*right))
-          },
+          Operator::Addition => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}add rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
+          Operator::Substraction => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}sub rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
+          Operator::Multiplication => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}mul rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
+          Operator::Division => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}div rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
           _ => panic!("operator wweird")
         }
-      }*/
+      }
       ANodeKind::Nullus => String::new(),
       _ => panic!("node: {:#?}", node)
     }
+    
   }
   
 
