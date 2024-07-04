@@ -69,7 +69,7 @@ fn extract_value(a: AST::Node) -> i32 {
   }
 }
 
-pub struct Compiler {pub stack_size: i32, pub stack_loc: i32}
+pub struct Compiler {pub stack_size: i32}
 
 
 impl Compiler {
@@ -110,8 +110,9 @@ impl Compiler {
   pub fn transform_function(&mut self, node: AST::Node, env: &mut Environment) -> ANode {
     match node.kind  {
       AST::NodeKind::FunctionDeclaration{ ref identifier,ref statement} => {
+        
         let mut unboxed_args = Vec::<AST::Node>::new();
-        match identifier.kind {
+        match identifier.clone().kind {
           AST::NodeKind::Identifier{symbol:_, ref childs} => {
             for i in childs {
               unboxed_args.push(*i.clone());
@@ -119,7 +120,10 @@ impl Compiler {
           }
           _ => panic!("no idea how no idea why but fuck you")
         };
-        env.declare(*identifier.clone(), ANode{kind: ANodeKind::Moenus(unboxed_args, *statement.clone()), id:-1});
+
+        env.declare(*identifier.clone(), ANode{kind: ANodeKind::Moenus(unboxed_args, *identifier.clone()), id:self.stack_size});
+        self.stack_size+=1;
+        
         ANode{kind: ANodeKind::FunctionDeclaration(*identifier.clone(), Box::new(self.transform(*statement.clone(), env))), id: -2}
       }
       _ => panic!("behind you")
@@ -132,10 +136,10 @@ impl Compiler {
       match variation.kind {
 
 
-        ANodeKind::Moenus(args, statement) => {
+        ANodeKind::Moenus(args, _) => {
           if args.len()==0 {
             
-            result = ANode{kind: ANodeKind::Moenus(vec![], statement), id:-1};
+            result = ANode{kind: ANodeKind::Moenus(vec![], node.clone()), id:-1};
           }
 
         }
@@ -162,11 +166,12 @@ impl Compiler {
     result
   }
 
-  pub fn code_gen(&mut self, ast: AAST, file: String) -> String {
+  pub fn code_gen(&mut self, ast: AAST, file: String, env: &mut Environment) -> String {
     let mut result = format!("bits 64\nglobal _start\n_start:\n");
     let mut indent = 2;
     for i in ast.body {
-      let n = &self.parse_node(i, &mut result, indent);
+      println!("{:#?}", i.clone());
+      let n = &self.parse_node(i, &mut result, indent, env);
       result += n;
     }
     result
@@ -175,7 +180,7 @@ impl Compiler {
   pub fn inject_label(&mut self, current: String, label: String, indent: i32) -> String {
     format!("{}{label}_start:\n{}", current.split("_start:\n").collect::<Vec<&str>>()[0], current.split("_start:\n").collect::<Vec<&str>>()[1]).to_string()
   }
-  pub fn parse_node(&mut self, node: ANode, current: &mut String, indent: i32) -> String {
+  pub fn parse_node(&mut self, node: ANode, current: &mut String, indent: i32, env: &mut Environment) -> String {
     let ev_indent = mul_string(indent, String::from(" "));
     match node.kind {
       ANodeKind::NumericLiteral(value) => {
@@ -184,22 +189,27 @@ impl Compiler {
 
 
       ANodeKind::Moenus(args, identifier) => {
-        format!("{ev_indent}pop rdi") //TODO - find place in stack of identifier (dw, in rust not assembly)
+        //println!("{:#?}", env);
+        let location = env.get(identifier);
+        //panic!("{:#?}", location)
+        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rdi", 8*(self.stack_size-location[0].id-1)) //tODO - find place in stack of identifier (dw, in rust not assembly)
       }
       ANodeKind::BuiltIn(fun) => {
         match fun {
           AFunctions::returnfn(value) => 
-              format!("{ev_indent}mov rax, 60\n{}\n{ev_indent}syscall\n", self.parse_node(*value, current, indent))
+              format!("{ev_indent}mov rax, 60\n{}\n{ev_indent}syscall\n", self.parse_node(*value, current, indent, env))
         }
       },
       ANodeKind::FunctionDeclaration(id, statement) => {
-        let raw = match id.kind {
+        let raw = match id.clone().kind {
           AST::NodeKind::Identifier{symbol, ..} => symbol,
           _ => panic!("how the fucking fuck")
         };
-        let temp = self.parse_node(*statement, current, indent);
+        let temp = self.parse_node(*statement, current, indent, env);
         *current = self.inject_label(current.to_string(), format!("{raw}:\n{}\n{ev_indent}ret\n", temp), indent);
-        self.stack_size+=1;
+
+
+        
         format!("{ev_indent}call {raw}\n{ev_indent}push rdi\n")
       }
       /*ANodeKind::BinaryExpression(left,right,operator) => {
@@ -227,8 +237,8 @@ impl Compiler {
 
   pub fn compile(&mut self, program: AST::Node, env: &mut Environment, file: String) -> String {
     let transformed = self.transform_program(program, env);
-    println!("{:#?} and {:#?}", transformed.clone(), env);
-    let code = self.code_gen(transformed, file);
+    //println!("{:#?} and {:#?}", transformed.clone(), env);
+    let code = self.code_gen(transformed, file, env);
     code
     //AST::Proventus{value: AST::Fructa::Nullus, id: -2}
   }

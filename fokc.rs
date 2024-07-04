@@ -16,7 +16,7 @@ fn main() {
 
 
   core::compiler::declare_builtins(&mut env);
-  let mut compiler = core::compiler::Compiler {stack_size: 0, stack_loc: 0};//error_handler: error_handler};
+  let mut compiler = core::compiler::Compiler {stack_size: 0};//error_handler: error_handler};
    
   let args = env::args().collect::<Vec<String>>();
   let input = fs::read_to_string(args[1].clone()).unwrap();
@@ -32,7 +32,7 @@ fn main() {
 
 
   let mut compiled_input = compiler.compile(parsed_input, &mut env, args[1].clone());
-  println!("Compiler Out: {}", compiled_input);
+  println!("Compiler Out: \n{}", compiled_input);
   if args.len()>3 {
     if args[2].clone()=="-o".to_string() {
       fs::write(args[3].clone(), compiled_input).unwrap();
