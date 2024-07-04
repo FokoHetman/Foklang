@@ -188,7 +188,8 @@ impl Compiler {
         //println!("{:#?}", env);
         let location = env.get(identifier);
         //panic!("{:#?}", location)
-        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rax", 8*(self.stack_size-location[0].id-1))
+        self.stack_size+=1;
+        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rax", 8*(self.stack_size-location[0].id-2))
       }
       ANodeKind::BuiltIn(fun) => {
         match fun {
@@ -211,7 +212,7 @@ impl Compiler {
       ANodeKind::BinaryExpression(left,right,operator) => {
         match operator {
           Operator::Addition => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}add rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
-          Operator::Substraction => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}sub rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
+          Operator::Substraction => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rbx\n{ev_indent}pop rax\n{ev_indent}sub rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
           Operator::Multiplication => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}mul rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
           Operator::Division => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}div rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
           _ => panic!("operator wweird")

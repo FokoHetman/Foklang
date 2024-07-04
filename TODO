@@ -1,2 +1,1 @@
-remake compiler, fix stack pos mostly
- 
+restructure binary operation (format! and appending to assembly code) to multi-line. In order to increase stack_size after push in case of variable use
