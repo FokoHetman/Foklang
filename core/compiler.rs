@@ -188,8 +188,8 @@ impl Compiler {
         //println!("{:#?}", env);
         let location = env.get(identifier);
         //panic!("{:#?}", location)
-        self.stack_size+=1;
-        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rax", 8*(self.stack_size-location[0].id-2))
+
+        format!("{ev_indent}push QWORD[rsp + {}]\n{ev_indent}pop rax", 8*(self.stack_size-location[0].id-1))
       }
       ANodeKind::BuiltIn(fun) => {
         match fun {
@@ -211,10 +211,52 @@ impl Compiler {
       }
       ANodeKind::BinaryExpression(left,right,operator) => {
         match operator {
-          Operator::Addition => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}add rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
-          Operator::Substraction => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rbx\n{ev_indent}pop rax\n{ev_indent}sub rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
-          Operator::Multiplication => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}mul rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
-          Operator::Division => format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}div rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env)),
+          Operator::Addition => {
+              let mut result = String::new();
+              result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+              self.stack_size+=1;
+              result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+              self.stack_size+=1;
+              result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
+              self.stack_size-=2;
+              result += &format!("{ev_indent}add rax, rbx");
+              result
+
+              //format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}add rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env))
+          },
+          Operator::Substraction => {
+            let mut result = String::new();
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+            self.stack_size+=1;
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+            self.stack_size+=1;
+            result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
+            self.stack_size-=2;
+            result += &format!("{ev_indent}sub rax, rbx");
+            result
+          },
+          Operator::Multiplication => {
+            let mut result = String::new();
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+            self.stack_size+=1;
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+            self.stack_size+=1;
+            result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
+            self.stack_size-=2;
+            result += &format!("{ev_indent}mul rbx");
+            result 
+          },
+          Operator::Division => {
+            let mut result = String::new();
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+            self.stack_size+=1;
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+            self.stack_size+=1;
+            result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
+            self.stack_size-=2;
+            result += &format!("{ev_indent}div rbx");
+            result 
+          },
           _ => panic!("operator wweird")
         }
       }
