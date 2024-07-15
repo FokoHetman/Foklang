@@ -28,6 +28,7 @@ enum ANodeKind {
   Program(Vec<Box<ANode>>),
   BinaryExpression(Box<ANode>, Box<ANode>, Operator),
   NumericLiteral(i32),
+  Identifier(String, Vec<ANode>),
   Moenus(Vec<AST::Node>, AST::Node),
 
   FunctionDeclaration(AST::Node, Box<ANode>),
@@ -126,7 +127,15 @@ impl Compiler {
   }
 
   pub fn transform_identifier(&mut self, node: AST::Node, env: &mut Environment) -> ANode {
-    let mut result = ANode{kind: ANodeKind::Nullus, id: -2};
+    ANode{kind: ANodeKind::Identifier(match node.kind {AST::NodeKind::Identifier{ref symbol, ..} => symbol.clone(), _ => panic!("how")}, match node.kind {AST::NodeKind::Identifier{childs, ..} => 
+        {
+          let mut result: Vec<ANode> = vec![];
+          for i in childs {
+            result.push(self.transform(*i.clone(), env));
+          }
+          result
+        }, _ => panic!("how")}), id: -1}
+    /*let mut result = ANode{kind: ANodeKind::Nullus, id: -2};
     'ma: for variation in env.get(node.clone()) {
       match variation.kind {
 
@@ -158,7 +167,7 @@ impl Compiler {
         _ => panic!("no impl/todo/I'llneverdoitprobably")
       }
     }
-    result
+    result*/
   }
 
   pub fn code_gen(&mut self, ast: AAST, file: String, env: &mut Environment) -> String {
@@ -202,12 +211,21 @@ impl Compiler {
           AST::NodeKind::Identifier{symbol, ..} => symbol,
           _ => panic!("how the fucking fuck")
         };
-        let temp = self.parse_node(*statement, current, indent, env);
+
+        // HERE, it is evaluated when identifier is undefined (smh);
+        let mut t_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+        /*match id.clone().kind {
+          AST::NodeKind::Identifier{symbol, childs} => {
+            
+          },
+          _ => {}
+        }*/ 
+        let temp = self.parse_node(*statement, current, indent, &mut t_env);
         *current = self.inject_label(current.to_string(), format!("{raw}:\n{}\n{ev_indent}ret\n", temp), indent);
 
 
-        
-        format!("{ev_indent}call {raw}\n{ev_indent}push rax\n")
+        String::new()
+        //format!("{ev_indent}call {raw}\n{ev_indent}push rax\n")
       }
       ANodeKind::BinaryExpression(left,right,operator) => {
         match operator {
@@ -260,6 +278,41 @@ impl Compiler {
           _ => panic!("operator wweird")
         }
       }
+      ANodeKind::Identifier(s, childs) => {
+        if env.has(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}}) {
+          match env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}})[0].clone().kind {
+
+            ANodeKind::BuiltIn(..) => {
+              self.parse_node(env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}})[0].clone(), current, indent, env)
+            },
+
+            ANodeKind::BuiltInDefinition(fun) => {
+              let mut args_vec: Vec<ANode> = vec![];
+              for i in childs {
+                args_vec.push(i);
+              }
+
+
+              let result = match fun {
+                ABuiltins::returnfn => ANode{kind: ANodeKind::BuiltIn(AFunctions::returnfn(Box::new(args_vec[0].clone()))), id: -1}
+              };
+              self.parse_node(result, current, indent, env)
+            },
+
+            ANodeKind::Moenus(args, ..) => {
+              let mut result = String::new();
+              for i in childs {
+                result += &format!("{}\n", self.parse_node(i, current, indent, env));
+              }
+              result += &format!("{ev_indent}call {s}\n");//{ev_indent}push rax\n")
+              result
+            },
+            _ => panic!("{:#?}", env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}}))
+          }
+        }else {
+          String::new() // function arg
+        }
+      },
       ANodeKind::Nullus => String::new(),
       _ => panic!("node: {:#?}", node)
     }
