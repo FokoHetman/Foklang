@@ -221,7 +221,7 @@ impl Compiler {
           _ => {}
         }*/ 
         let temp = self.parse_node(*statement, current, indent, &mut t_env);
-        *current = self.inject_label(current.to_string(), format!("{raw}:\n{}\n{ev_indent}ret\n", temp), indent);
+        *current = self.inject_label(current.to_string(), format!("{raw}:\n{ev_indent}mov rbp, rsp\n{ev_indent}add rsp, 8\n{}\n{ev_indent}mov rsp, rbp\n{ev_indent}ret\n", temp), indent);
 
 
         String::new()
@@ -237,7 +237,7 @@ impl Compiler {
               self.stack_size+=1;
               result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
               self.stack_size-=2;
-              result += &format!("{ev_indent}add rax, rbx");
+              result += &format!("{ev_indent}add rax, rbx\n");
               result
 
               //format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}add rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env))
@@ -250,7 +250,7 @@ impl Compiler {
             self.stack_size+=1;
             result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
             self.stack_size-=2;
-            result += &format!("{ev_indent}sub rax, rbx");
+            result += &format!("{ev_indent}sub rax, rbx\n");
             result
           },
           Operator::Multiplication => {
@@ -261,7 +261,7 @@ impl Compiler {
             self.stack_size+=1;
             result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
             self.stack_size-=2;
-            result += &format!("{ev_indent}mul rbx");
+            result += &format!("{ev_indent}mul rbx\n");
             result 
           },
           Operator::Division => {
@@ -272,7 +272,7 @@ impl Compiler {
             self.stack_size+=1;
             result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
             self.stack_size-=2;
-            result += &format!("{ev_indent}div rbx");
+            result += &format!("{ev_indent}div rbx\n");
             result 
           },
           _ => panic!("operator wweird")
@@ -302,7 +302,7 @@ impl Compiler {
             ANodeKind::Moenus(args, ..) => {
               let mut result = String::new();
               for i in childs {
-                result += &format!("{}\n", self.parse_node(i, current, indent, env));
+                result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(i, current, indent, env));
               }
               result += &format!("{ev_indent}call {s}\n");//{ev_indent}push rax\n")
               result
@@ -310,7 +310,7 @@ impl Compiler {
             _ => panic!("{:#?}", env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}}))
           }
         }else {
-          String::new() // function arg
+          format!("{ev_indent}pop rax\n") // function arg
         }
       },
       ANodeKind::Nullus => String::new(),
