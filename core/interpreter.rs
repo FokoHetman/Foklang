@@ -112,7 +112,7 @@ impl Interpreter {
         }
         
 
-        println!("{:#?}", env);
+        //println!("{:#?}", env);
         AST::Proventus{value: AST::Fructa::Nullus, id: -1}
       }
       _ => panic!("{} {:#?}", self.error_handler.interpreter("nonfunctiondeclaration_node").error_msg, node)
@@ -322,11 +322,11 @@ impl Interpreter {
     let searched = id.clone();
     match new_value.kind {
       AST::NodeKind::Identifier{ref symbol, ref childs} => {
-        println!("IDENTIFIER!!");
+        //println!("IDENTIFIER!!");
         match id.kind {
           AST::NodeKind::Identifier{symbol: ref symbol2, ..} => {
             if *symbol == *symbol2 {
-              println!("REPLACING!!");
+              //println!("REPLACING!!");
               return match env.get(id.clone())[0].value {
                 AST::Fructa::Numerum(i) => AST::Node{kind: AST::NodeKind::NumericLiteral{value: AST::NodeValue::Integer(i)}},
                 _ => panic!("Reverse evaluation not implemented for.. whatever you supplied dummy")
@@ -350,7 +350,7 @@ impl Interpreter {
         
         let mut nleft = Box::new(self.soft_evaluate(*left.clone(), id.clone(), env));
         let mut nright = Box::new(self.soft_evaluate(*right.clone(), id.clone(), env));
-        println!("BINARY EX!!");
+        //println!("BINARY EX!!");
 
         AST::Node{kind: AST::NodeKind::BinaryExpression{left: nleft, right: nright, operator: operator.clone()}}
 
@@ -403,7 +403,7 @@ impl Interpreter {
 
 
 
-              println!("{:#?}; {:#?}", args, childs);
+              //println!("{:#?}; {:#?}", args, childs);
               for i in 0..childs.len() {
                 
                 //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
@@ -421,7 +421,7 @@ impl Interpreter {
               let mut final_function = AST::Proventus{value: AST::Fructa::Moenus(args.clone(), statement.clone()), id: -1};
 
 
-              println!("{:#?}", final_function.clone());
+              //println!("{:#?}", final_function.clone());
               for i in 0..childs.clone().len() {
 
                 let mut one_arg_env = Environment{parent: Some(Box::new(env.clone())), error_handler: self.error_handler, ..Default::default()};
@@ -434,7 +434,7 @@ impl Interpreter {
                 };
 
 
-                println!("{:#?}", self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => statement.clone(), _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
+                //println!("{:#?}", self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => statement.clone(), _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
 
 
                 let new_args = match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => {let mut n_args = args.clone(); n_args.remove(0); n_args}, _ => panic!("gwuh")};
@@ -449,7 +449,7 @@ impl Interpreter {
               
 
 
-              println!("{:#?}, {:#?}", final_call, final_function);
+              //println!("{:#?}, {:#?}", final_call, final_function);
               env.current_node+=childs.len() as i32;
               if match final_function.value {
                 AST::Fructa::Moenus(ref args, _) => args.len()==0,

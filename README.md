@@ -38,13 +38,17 @@ A bit of terminology:
 ### functions
 <br>good i guess? Let's get to the cool stuff
 ```
-foklang$ let fn x y = x+y
+foklang$ fn x y = x+y
 ```
 what could that do? <br>Exactly! It defines a Moenus (function) that takes arguments (x,y), and adds them together.
 <br>Let's see it in action
 ```
 foklang$ fn 2 4
 6
+foklang$ add2 = fn 2
+
+foklang$ add 2 10
+12
 ```
 neat, but why not start with variables?
 ### variables

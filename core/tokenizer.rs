@@ -80,6 +80,9 @@ impl Tokenizer {
   pub fn is_alpha(self, string: String) -> bool {
     return string.to_lowercase()!=string.to_uppercase();
   }
+  pub fn is_identifier(self, string: String) -> bool {
+    return string.to_lowercase()!=string.to_uppercase() || self.is_numeric(string);
+  }
 
   pub fn tokenize(self, input: String) -> Vec<Token> {
     let mut list_input = input.split("").collect::<Vec<&str>>();
@@ -211,7 +214,7 @@ impl Tokenizer {
           }
           else if self.is_alpha(list_input[0].to_string()) {
             let mut tmp_ident: String = String::new();
-            while list_input.len()>0 && self.is_alpha(list_input[0].to_string()) {
+            while list_input.len()>0 && self.is_identifier(list_input[0].to_string()) {
               tmp_ident+=list_input[0];
               list_input.remove(0);
             }
