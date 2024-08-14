@@ -100,7 +100,19 @@ impl Interpreter {
           }
           _ => panic!("??")
         };
-        env.declare(*identifier, AST::Proventus{value: AST::Fructa::Moenus(unboxed_args, *statement),id:-1});
+
+        match (*statement).kind {
+          AST::NodeKind::Identifier{..} => {
+            let eval = self.evaluate(*statement, env);
+            env.declare(*identifier, eval);
+          }
+          _ => {
+            env.declare(*identifier, AST::Proventus{value: AST::Fructa::Moenus(unboxed_args, *statement),id:-1});
+          }
+        }
+        
+
+        println!("{:#?}", env);
         AST::Proventus{value: AST::Fructa::Nullus, id: -1}
       }
       _ => panic!("{} {:#?}", self.error_handler.interpreter("nonfunctiondeclaration_node").error_msg, node)
@@ -391,8 +403,8 @@ impl Interpreter {
 
 
 
-
-              for i in 0..args.len() {
+              println!("{:#?}; {:#?}", args, childs);
+              for i in 0..childs.len() {
                 
                 //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
                 let userdata = match self.evaluate(*childs[i].clone(), env).value {AST::Fructa::Numerum(i) => i, _ => 0};
@@ -408,9 +420,12 @@ impl Interpreter {
               let mut final_call = AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), childs: childs.clone()}};
               let mut final_function = AST::Proventus{value: AST::Fructa::Moenus(args.clone(), statement.clone()), id: -1};
 
+
+              println!("{:#?}", final_function.clone());
               for i in 0..childs.clone().len() {
 
                 let mut one_arg_env = Environment{parent: Some(Box::new(env.clone())), error_handler: self.error_handler, ..Default::default()};
+                
                 
                 match args[i].clone().kind {
                   AST::NodeKind::Identifier{..} => {one_arg_env.declare(args[i].clone(), self.evaluate(*childs[i].clone(), env));},
@@ -423,15 +438,21 @@ impl Interpreter {
 
 
                 let new_args = match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => {let mut n_args = args.clone(); n_args.remove(0); n_args}, _ => panic!("gwuh")};
+                
+
                 final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
 
+                
                 final_call = AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), 
                     childs: match final_call.kind {AST::NodeKind::Identifier{symbol, childs} => {let mut rch = childs.clone(); rch.remove(0); rch}, _ => panic!("ggwhu")}  }};
               }
+              
+
+
               println!("{:#?}, {:#?}", final_call, final_function);
               env.current_node+=childs.len() as i32;
-              if match final_call.kind {
-                AST::NodeKind::Identifier{childs,..} => childs.len()==0,
+              if match final_function.value {
+                AST::Fructa::Moenus(ref args, _) => args.len()==0,
                 _ => panic!("??")
               } {
                 result = self.evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!(">>>")}, env);
@@ -448,11 +469,11 @@ impl Interpreter {
 
 
 
-          env.current_node+=args.len() as i32;
+          //env.current_node+=args.len() as i32;
           //println!("FUNCTION_ENV: {:#?}", function_env);
-          result = self.evaluate(statement.clone(), &mut function_env);
+          //result = self.evaluate(statement.clone(), &mut function_env);
           //println!("R, STATEMENT: {:#?}, {:#?}", result, statement);
-          break
+          //break
           //evaluate the statement, with defined x and y
           
 

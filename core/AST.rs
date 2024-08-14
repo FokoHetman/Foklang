@@ -84,8 +84,50 @@ impl Fructa {
       },
       Fructa::Condicio(b) => b.to_string(),
       Fructa::Ustulo(c) => c.to_string(),
+      Fructa::Moenus(args, statement) => {
+        let mut result = String::new();
+        for i in args {
+          result += "\\";
+          result += &i.kind.display();
+          result+=" -> ";
+        }
+        result += " => ";
+        result += &statement.kind.display();
+        result
+        
+      }
       _ => panic!("display not implemented")
     }
+  }
+}
+impl NodeKind {
+  pub fn display(&self) -> String {
+    match self {
+      NodeKind::BinaryExpression{left,right,operator} => {
+        let mut result = String::new();
+        result += &left.kind.display();
+        result += " ";
+        result += match operator {
+          Operator::Addition => "+",
+          Operator::Substraction => "-",
+          Operator::Multiplication => "*",
+          Operator::Division => "/",
+          _ => "?",
+        };
+        result += " ";
+        result += &right.kind.display();
+        result
+      },
+      NodeKind::NumericLiteral{value} => {
+        match value {
+          NodeValue::Integer(i) => i.to_string(),
+          _ => panic!("noo")
+        }
+      },
+      NodeKind::Identifier{symbol,..} => symbol.to_string(),
+      _ => panic!("display not implemented")
+    }
+
   }
 }
 /*impl Proventus {
