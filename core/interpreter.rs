@@ -303,6 +303,74 @@ impl Interpreter {
       _ => panic!("[Interpreter Error] Tried to evaluate non-BinaryExpression Node as BinaryExpression, {:#?}", node)
     }
   }
+
+
+  fn soft_evaluate(&mut self, node: AST::Node, id: AST::Node, env: &mut Environment) -> AST::Node {
+    let mut new_value = node.clone();
+    let searched = id.clone();
+    match new_value.kind {
+      AST::NodeKind::Identifier{ref symbol, ref childs} => {
+        println!("IDENTIFIER!!");
+        match id.kind {
+          AST::NodeKind::Identifier{symbol: ref symbol2, ..} => {
+            if *symbol == *symbol2 {
+              println!("REPLACING!!");
+              return match env.get(id.clone())[0].value {
+                AST::Fructa::Numerum(i) => AST::Node{kind: AST::NodeKind::NumericLiteral{value: AST::NodeValue::Integer(i)}},
+                _ => panic!("Reverse evaluation not implemented for.. whatever you supplied dummy")
+              }
+            }
+          }
+          _ => panic!("non-identifier")
+        }
+        let mut new_childs: Vec<Box<AST::Node>> = vec![];
+        for i in childs {
+          new_childs.push(Box::new(self.soft_evaluate(*i.clone(), id.clone(), env)));
+        }
+        AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), childs: new_childs}}
+        
+        //childs = &mut new_childs;
+
+       
+      },
+      //searched => env.get(id.clone()),
+      AST::NodeKind::BinaryExpression{ref left, ref right, ref operator} => {
+        
+        let mut nleft = Box::new(self.soft_evaluate(*left.clone(), id.clone(), env));
+        let mut nright = Box::new(self.soft_evaluate(*right.clone(), id.clone(), env));
+        println!("BINARY EX!!");
+
+        AST::Node{kind: AST::NodeKind::BinaryExpression{left: nleft, right: nright, operator: operator.clone()}}
+
+        
+        
+      },
+      AST::NodeKind::List{ref body} => {
+        let mut new_body: Vec<Box<AST::Node>> = vec![];
+        for i in body {
+          new_body.push(Box::new(self.soft_evaluate(*i.clone(), id.clone(), env)));
+        }
+        
+        AST::Node{kind: AST::NodeKind::List{body: new_body}}
+        //body = &mut new_body;
+        
+      },
+      AST::NodeKind::Config{ref arguments} => {
+        let mut new_arguments: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
+        for i in arguments {
+          new_arguments.push(( i.0.clone(), Box::new(self.soft_evaluate(*i.1.clone(), id.clone(), env)) ) );
+        }
+        
+        //arguments = &mut new_arguments;
+        AST::Node{kind: AST::NodeKind::Config{arguments: new_arguments}}
+        
+      },
+      _ => new_value,
+    }
+    //println!("end");
+    //new_value
+  }
+
   fn evaluate_identifier(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     let mut result = AST::Proventus{value: AST::Fructa::Nullus, id: -2};
     //println!("{:#?}", env.clone());
@@ -315,7 +383,17 @@ impl Interpreter {
 
           match node.kind {
             AST::NodeKind::Identifier{ref symbol, ref childs} => {
+              
+              // no this is so dumb, make it take 1 argument, soft evaluate, continue till soft eval fails. 
+                                                    // If it reaches a failure -> return function with CURRENT_ARGS - SUPPLIED_ARGS arguments.
+                                                    // If it doesn't -> evaluate function, return
+                                                    
+
+
+
+
               for i in 0..args.len() {
+                
                 //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
                 let userdata = match self.evaluate(*childs[i].clone(), env).value {AST::Fructa::Numerum(i) => i, _ => 0};
                 //println!("{:#?} != {:#?} => {:#?}", args[i].clone(), self.evaluate(*childs[i].clone(), env), match args[i].clone().kind { AST::NodeKind::NumericLiteral{value:i, ..} => match i { AST::NodeValue::Integer(i) => i, _ => userdata}, _ => userdata} != userdata);
@@ -323,23 +401,62 @@ impl Interpreter {
                   //println!("continuing..");
                   continue 'ma
                 }
+              }
+
+
+
+              let mut final_call = AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), childs: childs.clone()}};
+              let mut final_function = AST::Proventus{value: AST::Fructa::Moenus(args.clone(), statement.clone()), id: -1};
+
+              for i in 0..childs.clone().len() {
+
+                let mut one_arg_env = Environment{parent: Some(Box::new(env.clone())), error_handler: self.error_handler, ..Default::default()};
+                
                 match args[i].clone().kind {
-                  AST::NodeKind::Identifier{..} => {function_env.declare(args[i].clone(), self.evaluate(*childs[i].clone(), env));},
+                  AST::NodeKind::Identifier{..} => {one_arg_env.declare(args[i].clone(), self.evaluate(*childs[i].clone(), env));},
                   AST::NodeKind::NumericLiteral{value,..} =>  {},
                   _ => {}
                 };
-                //self.evaluate();
-              //get further nodes, and assing them to real arguments (eg. x = 5)
+
+
+                println!("{:#?}", self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => statement.clone(), _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
+
+
+                let new_args = match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => {let mut n_args = args.clone(); n_args.remove(0); n_args}, _ => panic!("gwuh")};
+                final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
+
+                final_call = AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), 
+                    childs: match final_call.kind {AST::NodeKind::Identifier{symbol, childs} => {let mut rch = childs.clone(); rch.remove(0); rch}, _ => panic!("ggwhu")}  }};
               }
+              println!("{:#?}, {:#?}", final_call, final_function);
+              env.current_node+=childs.len() as i32;
+              if match final_call.kind {
+                AST::NodeKind::Identifier{childs,..} => childs.len()==0,
+                _ => panic!("??")
+              } {
+                result = self.evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!(">>>")}, env);
+              } else {
+                result = final_function;
+                
+              }
+              break
+
+
             }
             _ => {}
           }
+
+
+
           env.current_node+=args.len() as i32;
           //println!("FUNCTION_ENV: {:#?}", function_env);
           result = self.evaluate(statement.clone(), &mut function_env);
           //println!("R, STATEMENT: {:#?}, {:#?}", result, statement);
           break
           //evaluate the statement, with defined x and y
+          
+
+
         }
       AST::Fructa::BuiltIn(f) => {
         //if f==core::builtins::get {

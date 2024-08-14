@@ -43,22 +43,19 @@ impl Parser {
   }
 
   pub fn parse_stmt(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
-    match self.at(tokens).tokentype {
-      TokenType::Let => {
-        let _ = self.eat(tokens);
-        let function_id = self.parse_expr(tokens);
-        /*let mut args = Vec::<Box<AST::Node>>::new();
-        while self.at(tokens).tokentype==TokenType::Identifier {
-          args.push(Box::new(self.parse_expr(tokens)));
-        }*/
-        self.eatExpectValue(TokenValue::Operator(Operator::Equal), "expected =".to_string(), tokens);
-        let statement = self.parse_expr(tokens);
+    let mut left = self.parse_expr(tokens);
+    if self.at(tokens).tokenvalue == TokenValue::Operator(Operator::Equal) {
+        let _ = self.eat(tokens); // get rid of `=`
+        let function_id = left;
+        
+
+        let statement = self.parse_expr(tokens); // get the function
+
         //println!("FUNCTION PARS:  {:#?}, {:#?}, {:#?}",function_id,args, statement);
         return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
         //panic!("impl a Function here");
-      }
-      _ => self.parse_expr(tokens)
     }
+    return left
   }
   pub fn parse_expr(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
     let mut left = self.parse_additive_expr(tokens);
@@ -271,9 +268,9 @@ impl Parser {
         return AST::Node{kind: AST::NodeKind::List {body: cvec}}
       },
       
-      TokenType::SemiColon => {
-        self.parse_expr(tokens)
-      }
+      //TokenType::SemiColon => {
+      //  self.parse_expr(tokens)
+      //}
       _ => panic!("Invalid Token Found: {:#?}", eat)
     }
   }

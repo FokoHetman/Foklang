@@ -31,7 +31,6 @@ pub enum TokenValue {
   Int(i32),
   Operator(Operator),
   Identifier(String),
-  Let,
   Bool(bool),
 }
 #[derive(Debug,Clone,PartialEq)]
@@ -44,7 +43,6 @@ pub enum TokenType {
   OpenSParen,
   Integer,
   Operator,
-  Let,
   Identifier,
   Bool,
   EOF,
@@ -87,7 +85,7 @@ impl Tokenizer {
     let mut list_input = input.split("").collect::<Vec<&str>>();
     let mut tokens: Vec<Token> = [].to_vec();
     let mut pass;
-    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("let"), (TokenType::Let, TokenValue::Let)), (String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false)))]);
+    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false)))]);
     while list_input.len()>0 {
       pass = false;
       let current_char = list_input[0];
