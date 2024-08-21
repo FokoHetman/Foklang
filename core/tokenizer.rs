@@ -45,9 +45,12 @@ pub enum TokenType {
   Operator,
   Identifier,
   Bool,
+
   EOF,
   Nullus,
   SemiColon,
+  ArgumentDivisor,
+  
   Char,
   String,
 }
@@ -201,6 +204,9 @@ impl Tokenizer {
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Lower)});
             }
           }
+        },
+        "$" => {
+          tokens.push(Token{tokentype: TokenType::ArgumentDivisor, tokenvalue: TokenValue::Nullus});
         },
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());
