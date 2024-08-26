@@ -49,12 +49,14 @@ foklang$ add2 = fn 2
 
 foklang$ add 2 10
 12
+foklang$ add2 5
+7
 ```
 neat, but why not start with variables?
 ### variables
 Well, variables are basically "argumentless" functions
 ```
-foklang$ let NathansConfusion = 642
+foklang$ NathansConfusion = 642
 foklang$ NathansConfusion + 5
 647
 ```
@@ -64,7 +66,7 @@ Lists, or if you prefer, `Inventarii`.
 These are pretty trivial:
 ```
 foklang$ [1 2 3 4 5 6]
-1;2;3;4;5;6;
+[1;2;3;4;5;6;]
 ```
 huh? `;` is a default separator, however (unless you use identifiers, `x`, `variable` etc.) aren't needed
 ```
@@ -116,4 +118,14 @@ foklang$ get config multiplier + 3
 ```
 etc.
 
-neat. NOW WAIT FOR CONDITIONALS AND LOOPS BECAUSE I STILL DON'T HAVE THEM AAAAAAAAAAAAAAAAAAAAAAAAA
+## Common tasks
+Loops? Nah, we got recursion (haskell reference)
+```
+foklang$ factorial 0 = 0; factorial 1 = 1
+foklang$ factorial n = n * factorial (n-1)
+foklang$ factorial 5
+120
+```
+
+
+neat. NOW WAIT FOR CONDITIONALS ~~AND LOOPS~~ BECAUSE I STILL DON'T HAVE THEM AAAAAAAAAAAAAAAAAAAAAAAAA

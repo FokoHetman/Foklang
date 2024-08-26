@@ -218,14 +218,14 @@ impl Parser {
           match eat.tokenvalue { TokenValue::Int(integer) => integer, _ => panic!("???") })}},
       
       TokenType::OpenParen => {
-          let value = self.parse_expr(tokens);
+          let value = self.parse_stmt(tokens);
           self.eatExpect(TokenType::CloseParen, "Invalid Token found, expected CloseParen `)`".to_string(), tokens);
           return value;
       },
       TokenType::OpenSParen => {
         let mut args: Vec<Box<AST::Node>> = vec![];
         while self.at(tokens).tokentype!=TokenType::CloseSParen {
-          args.push(Box::new(self.parse_expr(tokens)));
+          args.push(Box::new(self.parse_stmt(tokens)));
         }
         self.eatExpect(TokenType::CloseSParen, "Invalid token".to_string(), tokens);
         return AST::Node{kind: AST::NodeKind::List {body: args}};
@@ -234,12 +234,12 @@ impl Parser {
           //make it own type tbh
           let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
           while self.at(tokens).tokentype!=TokenType::CloseCParen {
-            let left = self.parse_expr(tokens);
+            let left = self.parse_stmt(tokens);
             let mut right = AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}};
-            match self.parse_expr(tokens).kind {
+            match self.parse_stmt(tokens).kind {
               AST::NodeKind::BinaryExpression{ref operator, left:_, right:_} => {
                 if *operator==Operator::Equal {
-                  right = self.parse_expr(tokens);
+                  right = self.parse_stmt(tokens);
                 }
               }
               _ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
@@ -272,9 +272,10 @@ impl Parser {
         return AST::Node{kind: AST::NodeKind::List {body: cvec}}
       },
       
-      //TokenType::SemiColon => {
-      //  self.parse_expr(tokens)
-      //}
+      TokenType::SemiColon => {
+        //self.parse_stmt(tokens)
+        AST::Node{kind: AST::NodeKind::NullLiteral {value: AST::NodeValue::Nullus}}
+      },
       _ => panic!("Invalid Token Found: {:#?}", eat)
     }
   }

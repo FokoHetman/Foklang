@@ -149,6 +149,20 @@ pub fn join(arguments: Arguments) -> Proventus {
 }
 
 
+pub fn data(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::data(id, params, env) => {
+      //env.declare_type(id,  params);
+      Proventus {value: Fructa::Nullus, id: -1}
+    }
+    _ => panic!("Interpreter error: Wrong args provided (should never happen)")
+  }
+}
+
+
+
+
+
 
 pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environment) {
   env.declare(Node{kind: NodeKind::Identifier {symbol: id, childs:vec![]}},
@@ -158,21 +172,20 @@ pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environ
 }
 
 pub fn declare_builtins(env: &mut Environment) {
-  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("get"), childs: vec![]}},
-      Proventus{value: Fructa::BuiltIn(
-        get
-      ),id:-2});
-  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("print"), childs: vec![]}},
-      Proventus{value: Fructa::BuiltIn(
-        print
-      ),id:-2});
-  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("println"), childs: vec![]}},
-      Proventus{value: Fructa::BuiltIn(
-        println
-      ), id:-2});
+  /*declare_fn(String::from("get"), get, env);
+  declare_fn(String::from("print"), print, env);
+  declare_fn(String::from("println"), println, env);
   declare_fn(String::from("fmap"), fmap, env);
   declare_fn(String::from("join"), join, env);
-  declare_fn(String::from("return"), returnfn, env);
+  declare_fn(String::from("return"), returnfn, env);*/
+
+  let functions = vec![
+    (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
+    (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
+  ];
+  for i in functions {
+    declare_fn(i.0, i.1, env);
+  }
 }
 
 
@@ -183,11 +196,12 @@ pub struct Arguments {
 }
 #[derive(Debug)]
 pub enum FunctionArgs {
-  returnfn(Proventus),
+  returnfn(Proventus),                                  // (value_to_return)
 
-  get(Proventus, Proventus),
+  get(Proventus, Proventus),                            // (config, identifier)
   print(Vec<Proventus>),
-  fmap(Node, Proventus, Environment, Interpreter),
-  zerum(),
-  join(Vec<Proventus>),
+  fmap(Node, Proventus, Environment, Interpreter),      // (function_identifier, list)
+  zerum(),                                              // I don't remember implementing that
+  join(Vec<Proventus>),                                 // ([lists]), ex. (List1, List2)
+  data(Node, Vec<Node>, Environment),                                // (type_identifier,  [Parameterers]) ex. (Point Int Int) / (Point Float Float)
 }
