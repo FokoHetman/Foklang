@@ -159,6 +159,14 @@ pub fn data(arguments: Arguments) -> Proventus {
   }
 }
 
+pub fn type_of(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::type_of(val) => {
+      Proventus {value: Fructa::Filum(val.value.displayType()), id: -1}
+    }
+    _ => panic!("Interpreter error")
+  }
+}
 
 
 
@@ -182,6 +190,7 @@ pub fn declare_builtins(env: &mut Environment) {
   let functions = vec![
     (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
     (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
+    (String::from("t"), type_of),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
@@ -203,5 +212,6 @@ pub enum FunctionArgs {
   fmap(Node, Proventus, Environment, Interpreter),      // (function_identifier, list)
   zerum(),                                              // I don't remember implementing that
   join(Vec<Proventus>),                                 // ([lists]), ex. (List1, List2)
-  data(Node, Vec<Node>, Environment),                                // (type_identifier,  [Parameterers]) ex. (Point Int Int) / (Point Float Float)
+  data(Node, Vec<Node>, Environment),                   // (type_identifier,  [Parameterers]) ex. (Point Int Int) / (Point Float Float)
+  type_of(Proventus),                                   // (value_to_get_type_of)
 }

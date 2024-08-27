@@ -42,11 +42,14 @@ pub enum Fructa {
   Causor(Vec<(Node,Proventus)>),
   Inventarii(Vec<Proventus>),
 }
+
+
 #[derive(Clone,Debug, PartialEq)]
 pub struct Proventus {
   pub value: Fructa,
   pub id: i32,
 }
+
 
 impl Default for Proventus {
   fn default() -> Proventus {
@@ -91,7 +94,7 @@ impl Fructa {
           result += &i.kind.display();
           result+=" -> ";
         }
-        result += " => ";
+        //result += " => ";
         result += &statement.kind.display();
         result
         
@@ -99,6 +102,45 @@ impl Fructa {
       _ => panic!("display not implemented")
     }
   }
+  pub fn displayType(&self) -> String {
+    match self {
+      Fructa::Nullus => String::from("Nullus"),
+      Fructa::Numerum(_) => String::from("Int"),
+      Fructa::Condicio(_) => String::from("bool"),
+      Fructa::Ustulo(_) => String::from("char"),
+      Fructa::Inventarii(i) => {
+        let mut result = String::from("[");
+        
+        if i.len()>0 {
+          result+=&i[0].value.displayType();
+        }
+        result+="]";
+        result
+      },
+      Fructa::Causor(c) => {
+        let mut result = String::from("{");
+        for i in c {
+          result += &format!("{}: {};", i.0.kind.display(), i.1.value.displayType());
+        }
+        result += "}";
+        result
+      },
+      Fructa::Moenus(args, statement) => {
+        let mut result = String::new();
+        for i in args {
+          result += "\\";
+          result += &i.kind.display(); // replace with evaluating needed type according to function
+          result += " -> ";
+        }
+        result += &statement.kind.display(); // replace with evaluating function return type
+        result
+      }
+      _ => panic!("display type not implemented")
+    }
+  }
+  /*pub fn getType(&self) -> String {
+    
+  }*/
 }
 impl NodeKind {
   pub fn display(&self) -> String {

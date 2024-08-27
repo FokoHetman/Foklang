@@ -78,7 +78,15 @@ impl Interpreter {
               _ => panic!("112 - toParent call for non-Inventarii object")
             }
           } else {
-            args.push(self.evaluate(*i.clone(), env));
+            if args.len()>0 {
+              if args[0].value.displayType() == self.evaluate(*i.clone(), env).value.displayType() { // TODO:    make the comparision better
+                args.push(self.evaluate(*i.clone(), env));
+              } else {
+                panic!("List of type `{}` supplied with `{}`", args[0].value.displayType(), self.evaluate(*i.clone(), env).value.displayType());
+              }
+            } else {
+              args.push(self.evaluate(*i.clone(), env));
+            }
           }
         }
         AST::Proventus{value: AST::Fructa::Inventarii(args), id: -1}
@@ -498,41 +506,44 @@ impl Interpreter {
             _ => panic!("")
           };*/
         let mut fargs = builtins::FunctionArgs::zerum();
-        if f==builtins::print {
+        
+        if f == builtins::print {
           let mut n_args: Vec<AST::Proventus> = vec![];
           for i in args_vec {
             //parse types!!
             n_args.push(self.evaluate(i, env));
           }
           fargs = builtins::FunctionArgs::print(n_args);
-        }
-        else if f==builtins::get {
+
+        } else if f == builtins::get {
           fargs = builtins::FunctionArgs::get(self.evaluate(args_vec[0].clone(), env), 
-                AST::Proventus{value: match args_vec[1].clone().kind { AST::NodeKind::Identifier{symbol,..} => AST::Fructa::Filum(symbol),
-                AST::NodeKind::NumericLiteral{value} => match value { AST::NodeValue::Integer(i) => AST::Fructa::Numerum(i), _ => AST::Fructa::Numerum(0)}, 
-                _ => AST::Fructa::Nullus}, id: -1});
-        }
-        else if f==builtins::println {
+              AST::Proventus{value: match args_vec[1].clone().kind { AST::NodeKind::Identifier{symbol,..} => AST::Fructa::Filum(symbol),
+              AST::NodeKind::NumericLiteral{value} => match value { AST::NodeValue::Integer(i) => AST::Fructa::Numerum(i), _ => AST::Fructa::Numerum(0)}, 
+              _ => AST::Fructa::Nullus}, id: -1});
+
+        } else if f == builtins::println {
           let mut n_args: Vec<AST::Proventus> = vec![];
           for i in args_vec {
             n_args.push(self.evaluate(i, env));
           }
           fargs = builtins::FunctionArgs::print(n_args);
 
-        }
-        else if f==builtins::fmap {
+        } else if f == builtins::fmap {
           fargs = builtins::FunctionArgs::fmap(args_vec[0].clone(), self.evaluate(args_vec[1].clone(), env), env.clone(), self.clone());
-        }
-        else if f==builtins::join {
+
+        } else if f == builtins::join {
           let mut n_args: Vec<AST::Proventus> = vec![];
           for i in args_vec {
             n_args.push(self.evaluate(i, env));
           }
           fargs = builtins::FunctionArgs::join(n_args);
-        }
-        else if f==builtins::returnfn {
-           fargs = builtins::FunctionArgs::returnfn(self.evaluate(args_vec[0].clone(), env));
-        }
+        } else if f == builtins::returnfn {
+          fargs = builtins::FunctionArgs::returnfn(self.evaluate(args_vec[0].clone(), env));
+        } else if f == builtins::type_of {
+          //println!("{:#?}", args_vec.clone());
+          fargs = builtins::FunctionArgs::type_of(self.evaluate(args_vec[0].clone(), env));
+        };
+
         let args = builtins::Arguments{function: fargs};
         result = f(args)
           //panic!("builtin")
