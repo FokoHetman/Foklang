@@ -79,10 +79,10 @@ impl Interpreter {
             }
           } else {
             if args.len()>0 {
-              if args[0].value.displayType() == self.evaluate(*i.clone(), env).value.displayType() { // TODO:    make the comparision better
+              if args[0].value.display_type() == self.evaluate(*i.clone(), env).value.display_type() { // TODO:    make the comparision better
                 args.push(self.evaluate(*i.clone(), env));
               } else {
-                panic!("List of type `{}` supplied with `{}`", args[0].value.displayType(), self.evaluate(*i.clone(), env).value.displayType());
+                panic!("List of type `{}` supplied with `{}`", args[0].value.display_type(), self.evaluate(*i.clone(), env).value.display_type());
               }
             } else {
               args.push(self.evaluate(*i.clone(), env));

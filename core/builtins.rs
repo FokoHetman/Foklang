@@ -162,7 +162,7 @@ pub fn data(arguments: Arguments) -> Proventus {
 pub fn type_of(arguments: Arguments) -> Proventus {
   match arguments.function {
     FunctionArgs::type_of(val) => {
-      Proventus {value: Fructa::Filum(val.value.displayType()), id: -1}
+      Proventus {value: Fructa::Filum(val.value.display_type()), id: -1}
     }
     _ => panic!("Interpreter error")
   }

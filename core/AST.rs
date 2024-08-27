@@ -102,7 +102,7 @@ impl Fructa {
       _ => panic!("display not implemented")
     }
   }
-  pub fn displayType(&self) -> String {
+  pub fn display_type(&self) -> String {
     match self {
       Fructa::Nullus => String::from("Nullus"),
       Fructa::Numerum(_) => String::from("Int"),
@@ -112,7 +112,7 @@ impl Fructa {
         let mut result = String::from("[");
         
         if i.len()>0 {
-          result+=&i[0].value.displayType();
+          result+=&i[0].value.display_type();
         }
         result+="]";
         result
@@ -120,7 +120,7 @@ impl Fructa {
       Fructa::Causor(c) => {
         let mut result = String::from("{");
         for i in c {
-          result += &format!("{}: {};", i.0.kind.display(), i.1.value.displayType());
+          result += &format!("{}: {};", i.0.kind.display(), i.1.value.display_type());
         }
         result += "}";
         result
@@ -129,10 +129,11 @@ impl Fructa {
         let mut result = String::new();
         for i in args {
           result += "\\";
-          result += &i.kind.display(); // replace with evaluating needed type according to function
+          result += &i.kind.evaluate_identifier_type(statement.clone()); // replace with evaluating needed type according to function
           result += " -> ";
         }
-        result += &statement.kind.display(); // replace with evaluating function return type
+        //println!("{:#?}", statement.kind);
+        result += &statement.kind.evaluate_type(); // replace with evaluating function return type
         result
       }
       _ => panic!("display type not implemented")
@@ -171,7 +172,106 @@ impl NodeKind {
     }
 
   }
+  pub fn evaluate_identifier_type(&self, statement: Node) -> String {
+    //for our purposes, always assume int because too lazy to implement it rn
+    String::from("Int")
+  }
+  pub fn evaluate_type(&self) -> String {
+    match self {
+      NodeKind::NumericLiteral{..} => {
+        String::from("Int")
+      },
+      NodeKind::NullLiteral{..} => {
+        String::from("Null")
+      },
+      NodeKind::Char{..} => {
+        String::from("Char")
+      },
+      NodeKind::Bool{..} => {
+        String::from("bool")
+      },
+      NodeKind::Config{arguments} => {
+        let mut result = String::from("{");
+        for i in arguments {
+          result += &format!("{}: {};", i.0.kind.display(), i.1.kind.evaluate_type());
+        }
+        result += "}";
+        result
+      },
+      //NodeKind::Identifier{..} => {
+        
+      //},
+      NodeKind::BinaryExpression{left, right, operator} => {
+        match left.kind {
+          NodeKind::NumericLiteral{..} => {
+            match right.kind {
+              NodeKind::NumericLiteral{..} => {
+                left.kind.evaluate_type()
+              },
+              NodeKind::Identifier{..} => {
+                left.kind.evaluate_type()   // assume Int + Int
+              },
+              _ => panic!("???")
+            }
+          },
+          NodeKind::Identifier{..} => {
+            match right.kind {
+              NodeKind::NumericLiteral{..} => {
+                right.kind.evaluate_type() // assume Int + Int
+              },
+              NodeKind::Identifier{..} => {
+                String::from("Int") // for lack of better thing to do, assume Int + Int
+              }
+              _ => panic!("???")
+            }
+          },
+          /*NodeKind::List{..} => {
+            match *right.kind {
+              NodeKind::List{..} => {
+                match operator {
+                  Operator::Addition => left.kind.evaluate_type(),
+                  Operator::Multiplication => left.kind.evaluate_type(),
+                  _ => panic!("no impl")
+                }
+              },
+              _ => panic!("?????")
+            }
+          },*/
+          _ => panic!("??????????")
+        }
+      },
+      NodeKind::List{body} => {
+        let mut result = String::from("[");
+        if body.len()>0 {
+          result += &(*body[0].kind.evaluate_type());
+        }
+        result += "]";
+        result
+      },
+      _ => panic!("pre-evaluation not implemented for {:#?}", self)
+      //NodeKind::
+    }
+  }
 }
+
+/*
+#[derive(Clone, Debug, PartialEq)]
+pub enum NodeKind {
+  Program {body: Vec<Box<Node>>, id: i32},
+  Identifier {symbol: String, childs: Vec<Box<Node>>},
+  NumericLiteral{ value: NodeValue},
+  Expression,
+  BinaryExpression{ left: Box<Node>, right: Box<Node>, operator: Operator},
+  Stmt,
+  Char{value: NodeValue},
+  NullLiteral{value: NodeValue},
+  List{body: Vec<Box<Node>>},
+  Bool{value: NodeValue},
+  Config{arguments: Vec<(Box<Node>, Box<Node>)>},
+  FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
+}*/
+
+
 /*impl Proventus {
   fn get(self, key: Proventus) -> Proventus {
     let mut returnd = Proventus{value:Fructa::Nullus, id:-3};
