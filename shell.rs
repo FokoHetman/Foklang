@@ -1,7 +1,9 @@
 mod core;
 use std::{
   io,
-  io::{Write},
+  io::{Read,Write},
+  env,
+  fs,
 };
 
 fn main() {
@@ -10,11 +12,22 @@ fn main() {
   let tokenizer = core::tokenizer::Tokenizer {};
   let mut parser = core::parser::Parser {};
   let error_handler = core::error_handler::ErrorHandler {};
-  let mut env = core::env::Environment{ error_handler: error_handler, ..Default::default() };
-
+  let mut env = core::env::Environment{ error_handler, ..Default::default() };
 
   core::builtins::declare_builtins(&mut env);
-  let mut interpreter = core::interpreter::Interpreter {error_handler: error_handler};
+  let mut interpreter = core::interpreter::Interpreter {error_handler};
+
+
+  if env::args().len() > 1 {
+    input = fs::read_to_string(env::args().collect::<Vec<String>>()[1].clone()).unwrap();
+    let exit_code = match interpreter.evaluate(parser.parse(tokenizer.tokenize(input)), &mut env).value {
+      core::AST::Fructa::Numerum(i) => i,
+      _ => 0,
+    };
+    return;
+  }
+
+  
   loop {
     print!("{}$ ", shell);
     input = String::new();

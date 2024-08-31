@@ -4,24 +4,27 @@ use std::{
 };
 #[derive(PartialEq,Clone,Debug)]
 pub enum Operator {
-  Addition,
-  Substraction,
-  Multiplication,
-  Division,
-  Exponentiation,
-  Equal,
+  Addition,             // +    -> a + b
+  Substraction,         // -    -> x - y
+  Multiplication,       // *    ->  x * 2
+  Division,             // /    ->  e / 2
+  Exponentiation,       // ^    ->  e ^ x
+  Equal,                // =    ->  x = 4
   
-  RightArrow,
-  LeftArrow,
+  RightArrow,           // ->   ->  x -> idk
+  LeftArrow,            // <-   ->  x <- [1..10]
 
-  Comparision,
+  Comparision,          // ==   ->  2+2==4
 
-  Greater,
-  Lower,
-  GreaterEqual,
-  LowerEqual,
+  Greater,              // >    ->  2 > 1
+  Lower,                // <    ->  2 <  4
+  GreaterEqual,         // >=   ->  2 >= 1
+  LowerEqual,           // <=   ->  2 <= 4
 
-  DoubleDot,
+  DoubleDot,            // ..   ->  [1..10]
+  SingleDot,            // .    -> help.me  (get help me)
+
+  ListSplitter,         // :    ->  (x:xs)
 }
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenValue {
@@ -49,8 +52,11 @@ pub enum TokenType {
   EOF,
   Nullus,
   SemiColon,
-  ArgumentDivisor,
+
+
+  ArgumentDivisor,      // $    ->  f x $ g y  -> f(x, (g(y)))
   
+
   Char,
   String,
 }
@@ -120,7 +126,7 @@ impl Tokenizer {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DoubleDot)});
             }
-            _ => {}
+            _ => {tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::SingleDot)});}
           }
         },
         "=" => {
@@ -207,6 +213,9 @@ impl Tokenizer {
         },
         "$" => {
           tokens.push(Token{tokentype: TokenType::ArgumentDivisor, tokenvalue: TokenValue::Nullus});
+        },
+        ":" => {
+          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::ListSplitter)});
         },
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());

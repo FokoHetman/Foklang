@@ -13,8 +13,10 @@ pub enum NodeKind {
   Char{value: NodeValue},
   NullLiteral{value: NodeValue},
   List{body: Vec<Box<Node>>},
+  ListConcat{item: Box<Node>, list: Box<Node>},
   Bool{value: NodeValue},
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
+  Access{parent: Box<Node>, value: Box<Node>},
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
 }
 #[derive(Debug, Clone, PartialEq)]

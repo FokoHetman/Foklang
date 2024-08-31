@@ -1,2 +1,0 @@
-let f x y = x+y;
-return (f 2 4)

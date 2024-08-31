@@ -40,7 +40,9 @@ impl Interpreter {
       AST::NodeKind::BinaryExpression{left:_,right:_,operator:_} => self.evaluate_binary_expression(node, env),
       AST::NodeKind::Identifier{symbol:_, ..} => self.evaluate_identifier(node, env),
       AST::NodeKind::List{..} => self.evaluate_list(node, env),
+      AST::NodeKind::ListConcat{..} => self.evaluate_list(node, env),
       AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
+      AST::NodeKind::Access{..} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
       AST::NodeKind::Char{..} => self.evaluate_char(node, env),
       AST::NodeKind::Bool{..} => self.evaluate_bool(node, env),
@@ -65,6 +67,34 @@ impl Interpreter {
   }
   fn evaluate_list(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
+      AST::NodeKind::ListConcat{item, list} => {
+        let evaluated = self.evaluate(*list.clone(), env);
+        let evaluated_item = self.evaluate(*item.clone(), env);
+        let ev_type = evaluated.value.display_type();
+        match evaluated.value {
+          AST::Fructa::Inventarii(l) => {
+            let mut l2: Vec<AST::Proventus> = l.into_iter().rev().collect();
+            if evaluated_item.value.display_type() == l2[0].value.display_type() {
+              l2.push(evaluated_item);
+            }
+            else if evaluated_item.value.display_type() == /*evaluated.value.display_type()*/ev_type {
+              match evaluated_item.value {
+                AST::Fructa::Inventarii(il) => {
+                  for i in il.into_iter().rev().collect::<Vec<AST::Proventus>>() {
+                    l2.push(i);
+                  }
+                }
+                _ => panic!("not possible.")
+              }
+            }
+            else {
+              panic!("wrong type concat i think")
+            }
+            AST::Proventus{value: AST::Fructa::Inventarii(l2.into_iter().rev().collect()), id: -1}
+          }
+          _ => panic!("?????????????/")
+        }
+      },
       AST::NodeKind::List{body} => {
         let mut args: Vec<AST::Proventus> = vec![];
         for i in body {
@@ -92,7 +122,7 @@ impl Interpreter {
         AST::Proventus{value: AST::Fructa::Inventarii(args), id: -1}
         
       }
-      _ => panic!("A")
+      _ => panic!("not a list-typey")
     }
 
   }
@@ -562,6 +592,32 @@ impl Interpreter {
   }
   fn evaluate_object(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
+      AST::NodeKind::Access{parent, value} => {
+        match value.kind {
+          AST::NodeKind::Identifier{symbol: vsymbol, ..} => {
+            let eval = self.evaluate(*parent.clone(), env);
+            let mut returned = AST::Proventus{value: AST::Fructa::Nullus, id:-1};
+            match eval.value {
+              AST::Fructa::Causor(args) => {
+                for i in args {
+                  match i.0.kind {
+                    AST::NodeKind::Identifier{symbol, ..} => {
+                      if vsymbol==symbol {
+                        returned = i.1;
+                      }
+                    }
+                    _ => panic!("A")
+                  }
+                }
+              }
+              _ => panic!("not a config value")
+            }
+            returned
+            
+          }
+          _ => panic!("not an identifier")
+        }
+      },
       AST::NodeKind::Config{arguments} => {
         let mut args: Vec<(AST::Node, AST::Proventus)> = vec![];
         for i in arguments {

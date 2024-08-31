@@ -99,7 +99,7 @@ impl Compiler {
       
       AST::NodeKind::Identifier{..} => self.transform_identifier(node, env),
       AST::NodeKind::FunctionDeclaration{..} => self.transform_function(node, env),
-      _ => panic!("not impl")
+      _ => panic!("Transform not implemented for node: {:#?}", node)
     }
   }
 
