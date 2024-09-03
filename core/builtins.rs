@@ -84,6 +84,68 @@ pub fn fmap(arguments: Arguments) -> Proventus {
   //panic!("A")
 }
 
+pub fn length(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::length(list) => {
+      match list.value {
+        Fructa::Inventarii(l) => {
+          Proventus{value: Fructa::Numerum(l.len() as i32), id: -1}
+        }
+        _ => panic!("dat btich2: electric boogaloo")
+      }
+    },
+    _ => panic!("dat bitch")
+  }
+}
+
+pub fn take(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::take(amount, list) => {
+      match amount.value {
+        Fructa::Numerum(i) => {
+          match list.value {
+            Fructa::Inventarii(l) => {
+              Proventus{value: Fructa::Inventarii(l[0..(i as usize)].to_vec()), id: -1}
+            }
+            _ => panic!("dat btich2: electric boogaloo")
+          }
+        }
+        _ => panic!("user error I think")
+      }
+    },
+    _ => panic!("dat bitch")
+  }
+
+}
+
+pub fn head(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::headTail(list) => {
+      match list.value {
+        Fructa::Inventarii(l) => {
+          l[0].clone()
+        }
+        _ => panic!("user error iirc")
+      }
+    }
+    _ => panic!("interpreter fuck you sincerely")
+  }
+}
+pub fn tail(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::headTail(list) => {
+      match list.value {
+        Fructa::Inventarii(l) => {
+          l.into_iter().rev().collect::<Vec<Proventus>>()[0].clone()
+        }
+        _ => panic!("user error iirc")
+      }
+    }
+    _ => panic!("interpreter fuck you sincerely")
+  }
+
+}
+
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
   match arguments.function {
@@ -180,17 +242,11 @@ pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environ
 }
 
 pub fn declare_builtins(env: &mut Environment) {
-  /*declare_fn(String::from("get"), get, env);
-  declare_fn(String::from("print"), print, env);
-  declare_fn(String::from("println"), println, env);
-  declare_fn(String::from("fmap"), fmap, env);
-  declare_fn(String::from("join"), join, env);
-  declare_fn(String::from("return"), returnfn, env);*/
-
   let functions = vec![
     (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
     (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
-    (String::from("t"), type_of),
+    (String::from("t"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
+    (String::from("tail"), tail),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
@@ -215,4 +271,7 @@ pub enum FunctionArgs {
   data(Node, Vec<Node>, Environment),                   // (type_identifier,  [Parameterers]) ex. (Point Int Int) / (Point Float Float)
   type_of(Proventus),                                   // (value_to_get_type_of)
   //read_file(Proventus), 
+  length(Proventus),                                    // (list)
+  take(Proventus, Proventus),                           // (amount, list)
+  headTail(Proventus),                                      // (list),
 }

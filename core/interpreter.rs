@@ -14,7 +14,7 @@ impl Interpreter {
     let mut last_eval = AST::Proventus{..Default::default()};
 
     match program.kind {
-      AST::NodeKind::Program{body:body,id:id} => {
+      AST::NodeKind::Program{body,id} => {
         env.current_node = 0;
         let mut counter = 0;
         env.node_stack = [].to_vec();
@@ -128,7 +128,7 @@ impl Interpreter {
   }
   fn evaluate_function(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
-      AST::NodeKind::FunctionDeclaration{identifier: identifier, statement: statement} => {
+      AST::NodeKind::FunctionDeclaration{identifier, statement} => {
         let mut unboxed_args = Vec::<AST::Node>::new();
         match identifier.kind {
           AST::NodeKind::Identifier{symbol:_, ref childs} => {
@@ -443,6 +443,8 @@ impl Interpreter {
 
               //println!("{:#?}; {:#?}", args, childs);
               for i in 0..childs.len() {
+
+                // TODO: impl typechecking or something for all types
                 
                 //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
                 let userdata = match self.evaluate(*childs[i].clone(), env).value {AST::Fructa::Numerum(i) => i, _ => 0};
@@ -572,6 +574,12 @@ impl Interpreter {
         } else if f == builtins::type_of {
           //println!("{:#?}", args_vec.clone());
           fargs = builtins::FunctionArgs::type_of(self.evaluate(args_vec[0].clone(), env));
+        } else if f == builtins::head || f==builtins::tail {
+          fargs = builtins::FunctionArgs::headTail(self.evaluate(args_vec[0].clone(), env));
+        } else if f == builtins::length {
+          fargs = builtins::FunctionArgs::length(self.evaluate(args_vec[0].clone(), env));
+        } else if f == builtins::take {
+          fargs = builtins::FunctionArgs::take(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(),env));
         };
 
         let args = builtins::Arguments{function: fargs};
