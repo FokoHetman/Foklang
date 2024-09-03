@@ -88,7 +88,7 @@ impl Interpreter {
               }
             }
             else {
-              panic!("wrong type concat i think")
+              panic!("wrong type concat i think, {}, {}, {}", evaluated_item.value.display_type(), ev_type, l2[0].value.display_type())
             }
             AST::Proventus{value: AST::Fructa::Inventarii(l2.into_iter().rev().collect()), id: -1}
           }
@@ -355,6 +355,13 @@ impl Interpreter {
   }
 
 
+  fn reverse_eval(&mut self, val: AST::Proventus) -> AST::Node {
+    match val.value {
+      AST::Fructa::Numerum(i) => AST::Node{kind: AST::NodeKind::NumericLiteral{value: AST::NodeValue::Integer(i)}},
+      AST::Fructa::Inventarii(i) => {let mut n = vec![]; for x in i.clone() { n.push(Box::new(self.reverse_eval(x)))}; AST::Node{kind: AST::NodeKind::List{body: n}}},
+      _ => panic!("Reverse evaluation not implemented for.. whatever you supplied dummy")
+    }
+  }
   fn soft_evaluate(&mut self, node: AST::Node, id: AST::Node, env: &mut Environment) -> AST::Node {
     let mut new_value = node.clone();
     let searched = id.clone();
@@ -365,10 +372,13 @@ impl Interpreter {
           AST::NodeKind::Identifier{symbol: ref symbol2, ..} => {
             if *symbol == *symbol2 {
               //println!("REPLACING!!");
-              return match env.get(id.clone())[0].value {
+              return self.reverse_eval(env.get(id.clone())[0].clone());
+              /*
+              return match &env.get(id.clone())[0].value {
                 AST::Fructa::Numerum(i) => AST::Node{kind: AST::NodeKind::NumericLiteral{value: AST::NodeValue::Integer(i)}},
+                AST::Fructa::Inventarii(i) => {let mut n = vec![]; for x in i.clone() { n.push(Box::new(self.reverse_eval(x)))}; AST::Node{kind: AST::NodeKind::List{body: n}}},
                 _ => panic!("Reverse evaluation not implemented for.. whatever you supplied dummy")
-              }
+              }*/
             }
           }
           _ => panic!("non-identifier")
@@ -415,6 +425,12 @@ impl Interpreter {
         AST::Node{kind: AST::NodeKind::Config{arguments: new_arguments}}
         
       },
+      AST::NodeKind::ListConcat{item, list} => {
+        let new_item = Box::new(self.soft_evaluate(*item.clone(), id.clone(), env));
+        let new_list = Box::new(self.soft_evaluate(*list.clone(), id.clone(), env));
+        AST::Node{kind: AST::NodeKind::ListConcat{item: new_item, list: new_list}}
+
+      },
       _ => new_value,
     }
     //println!("end");
@@ -447,13 +463,50 @@ impl Interpreter {
                 // TODO: impl typechecking or something for all types
                 
                 //let evaluated = self.evaluate(env.node_stack[env.current_node as usize+i+1].clone(), env);
+                //println!("{:#?}", args);
+                match args[i].clone().kind {
+                  AST::NodeKind::List{body} => {
+                    let eval = self.evaluate(*childs[i].clone(), env);
+                    match eval.value {
+                      AST::Fructa::Inventarii(_) => {
+                        if self.evaluate(args[i].clone(), env) != eval {
+                          continue 'ma
+                        }
+                      }
+                      _ => {} //prbobaly panic idk
+                    }
+                  },
+                  AST::NodeKind::ListConcat{item, list} => {
+                    match self.evaluate(*childs[i].clone(), env).value {
+                      AST::Fructa::Inventarii(v) => {}
+                      _ => {}
+                    } //why
+                  },
+                  AST::NodeKind::NumericLiteral{value} => {
+                    let rval = match value {
+                      AST::NodeValue::Integer(i) => i,
+                      _ => 0,
+                    };
+                    let rag = match self.evaluate(*childs[i].clone(), env).value {
+                      AST::Fructa::Numerum(value2) => value2,
+                      _ => rval
+                    };
+                    //println!("{}, {}", rag, rval);
+                    if rag != rval {
+                      //println!("skipping, {}, {}", rag, rval);
+                      continue 'ma
+                    }
+                  }
+                  _ => {}
+                };/*
                 let userdata = match self.evaluate(*childs[i].clone(), env).value {AST::Fructa::Numerum(i) => i, _ => 0};
                 //println!("{:#?} != {:#?} => {:#?}", args[i].clone(), self.evaluate(*childs[i].clone(), env), match args[i].clone().kind { AST::NodeKind::NumericLiteral{value:i, ..} => match i { AST::NodeValue::Integer(i) => i, _ => userdata}, _ => userdata} != userdata);
                 if match args[i].clone().kind { AST::NodeKind::NumericLiteral{value: i, ..} => match i { AST::NodeValue::Integer(i) => i, _ => userdata}, _ => userdata} != userdata {
                   //println!("continuing..");
                   continue 'ma
-                }
+                }*/
               }
+              //println!("hi");
 
 
 
@@ -470,6 +523,12 @@ impl Interpreter {
                 match args[i].clone().kind {
                   AST::NodeKind::Identifier{..} => {one_arg_env.declare(args[i].clone(), self.evaluate(*childs[i].clone(), env));},
                   AST::NodeKind::NumericLiteral{value,..} =>  {},
+                  AST::NodeKind::ListConcat{item, list} => {
+                    match self.evaluate(*childs[i].clone(), env).value {
+                      AST::Fructa::Inventarii(v) => {one_arg_env.declare(*item.clone(), v[0].clone()); let mut v2 = v.clone(); v2.remove(0); one_arg_env.declare(*list.clone(), AST::Proventus{value: AST::Fructa::Inventarii(v2), id: -1}); },
+                      _ => panic!("no impl for ListConcat of non list.. dumbfuck"
+                    )};
+                  },
                   _ => {}
                 };
 
@@ -479,13 +538,21 @@ impl Interpreter {
 
                 let new_args = match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => {let mut n_args = args.clone(); n_args.remove(0); n_args}, _ => panic!("gwuh")};
                 
-
-                final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
-
+                match args[i].clone().kind {
+                  AST::NodeKind::Identifier{..} => {
+                    final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
+                  },
+                  AST::NodeKind::ListConcat{item, list} => {
+                    final_function.value = AST::Fructa::Moenus(new_args.clone(), self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, *item.clone(), &mut one_arg_env));
+                    final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, *list.clone(), &mut one_arg_env));
+                  },
+                  _ => {}
+                }
                 
                 final_call = AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), 
                     childs: match final_call.kind {AST::NodeKind::Identifier{symbol, childs} => {let mut rch = childs.clone(); rch.remove(0); rch}, _ => panic!("ggwhu")}  }};
               }
+              //println!("{:#?}", final_function);
               
 
 
@@ -500,6 +567,7 @@ impl Interpreter {
                 result = final_function;
                 
               }
+              //println!("{:#?}", result);
               break
 
 
