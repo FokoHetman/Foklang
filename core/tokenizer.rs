@@ -25,6 +25,7 @@ pub enum Operator {
   SingleDot,            // .    -> help.me  (get help me)
 
   ListSplitter,         // :    ->  (x:xs)
+  DoubleColon            // ::   -> function :: Type -> Type...
 }
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenValue {
@@ -59,6 +60,7 @@ pub enum TokenType {
 
   Char,
   String,
+  If,
 }
 #[derive(Debug,Clone,PartialEq)]
 pub struct Token {
@@ -97,7 +99,7 @@ impl Tokenizer {
     let mut list_input = input.split("").collect::<Vec<&str>>();
     let mut tokens: Vec<Token> = [].to_vec();
     let mut pass;
-    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false)))]);
+    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false))), (String::from("if"), (TokenType::If, TokenValue::Nullus))]);
     while list_input.len()>0 {
       pass = false;
       let current_char = list_input[0];
@@ -215,7 +217,15 @@ impl Tokenizer {
           tokens.push(Token{tokentype: TokenType::ArgumentDivisor, tokenvalue: TokenValue::Nullus});
         },
         ":" => {
-          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::ListSplitter)});
+          match list_input[1] {
+            ":" => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DoubleColon)});
+            },
+            _ => {
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::ListSplitter)});
+            }
+          }
         },
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());

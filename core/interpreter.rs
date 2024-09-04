@@ -44,6 +44,7 @@ impl Interpreter {
       AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
       AST::NodeKind::Access{..} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
+      AST::NodeKind::TypeDeclaration{identifier: _, ftype: _} => self.evaluate_function(node, env),
       AST::NodeKind::Char{..} => self.evaluate_char(node, env),
       AST::NodeKind::Bool{..} => self.evaluate_bool(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
@@ -74,21 +75,31 @@ impl Interpreter {
         match evaluated.value {
           AST::Fructa::Inventarii(l) => {
             let mut l2: Vec<AST::Proventus> = l.into_iter().rev().collect();
-            if evaluated_item.value.display_type() == l2[0].value.display_type() {
+            if l2.len()==0 {
               l2.push(evaluated_item);
-            }
-            else if evaluated_item.value.display_type() == /*evaluated.value.display_type()*/ev_type {
-              match evaluated_item.value {
-                AST::Fructa::Inventarii(il) => {
-                  for i in il.into_iter().rev().collect::<Vec<AST::Proventus>>() {
-                    l2.push(i);
-                  }
-                }
-                _ => panic!("not possible.")
+            } else {
+              if evaluated_item.value.display_type() == l2[0].value.display_type() {
+                l2.push(evaluated_item);
               }
-            }
-            else {
-              panic!("wrong type concat i think, {}, {}, {}", evaluated_item.value.display_type(), ev_type, l2[0].value.display_type())
+              else if evaluated_item.value.display_type() == /*evaluated.value.display_type()*/ev_type {
+                match evaluated_item.value {
+                  AST::Fructa::Inventarii(il) => {
+                    for i in il.into_iter().rev().collect::<Vec<AST::Proventus>>() {
+                      l2.push(i);
+                    }
+                  }
+                  _ => panic!("not possible.")
+                }
+              }
+              else if evaluated_item.value.display_type() == "[]".to_string() {
+                
+              }
+              else if ev_type == "[]".to_string() {
+                l2 = match evaluated_item.value { AST::Fructa::Inventarii(l) => l, _ => vec![evaluated_item]};
+              }
+              else {
+                panic!("wrong type concat i think, {}, {}, {}", evaluated_item.value.display_type(), ev_type, l2[0].value.display_type())
+              }
             }
             AST::Proventus{value: AST::Fructa::Inventarii(l2.into_iter().rev().collect()), id: -1}
           }
@@ -128,6 +139,9 @@ impl Interpreter {
   }
   fn evaluate_function(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
+      AST::NodeKind::TypeDeclaration{identifier, ftype} => {
+        AST::Proventus{value: AST::Fructa::Nullus, id: -1}
+      },
       AST::NodeKind::FunctionDeclaration{identifier, statement} => {
         let mut unboxed_args = Vec::<AST::Node>::new();
         match identifier.kind {
@@ -541,6 +555,9 @@ impl Interpreter {
                 match args[i].clone().kind {
                   AST::NodeKind::Identifier{..} => {
                     final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));
+                  },
+                  AST::NodeKind::List{..} => {
+                    final_function.value = AST::Fructa::Moenus(new_args, match final_function.value { AST::Fructa::Moenus(args, statement) => statement, _ => panic!("??")});
                   },
                   AST::NodeKind::ListConcat{item, list} => {
                     final_function.value = AST::Fructa::Moenus(new_args.clone(), self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, *item.clone(), &mut one_arg_env));

@@ -11,7 +11,7 @@ impl Parser {
     let token = tokens[0].clone();
     tokens.remove(0);
     return token
-  }
+ }
   pub fn eatExpect(&mut self, expectedTokenType: TokenType, err_msg: String, tokens: &mut Vec<Token>) -> Token {
     let token = tokens[0].clone();
     tokens.remove(0);
@@ -43,17 +43,39 @@ impl Parser {
   }
 
   pub fn parse_stmt(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
-    let mut left = self.parse_expr(tokens);
+    let mut left = self.parse_type_declaration(tokens);
     if self.at(tokens).tokenvalue == TokenValue::Operator(Operator::Equal) {
         let _ = self.eat(tokens); // get rid of `=`
         let function_id = left;
         
 
-        let statement = self.parse_expr(tokens); // get the function
+        let statement = self.parse_type_declaration(tokens); // get the function
 
         //println!("FUNCTION PARS:  {:#?}, {:#?}, {:#?}",function_id,args, statement);
         return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
         //panic!("impl a Function here");
+    }
+    return left
+  }
+  pub fn parse_type_declaration(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
+    let mut left = self.parse_statements(tokens); // Function
+    while self.at(tokens).tokenvalue == TokenValue::Operator(Operator::DoubleColon) {
+      self.eat(tokens);
+      left = AST::Node{kind: AST::NodeKind::TypeDeclaration{
+        identifier: Box::new(left),
+        ftype: Box::new(self.parse_statements(tokens)),
+      }};
+    }
+    left
+  }
+  pub fn parse_statements(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
+    let mut left = self.parse_expr(tokens);
+    while self.at(tokens).tokentype == TokenType::If {
+      self.eat(tokens);
+      left = AST::Node{kind: AST::NodeKind::IfStatement {
+        condition: Box::new(self.parse_expr(tokens)),
+        body: Box::new(self.parse_expr(tokens)),
+      }};
     }
     return left
   }
@@ -65,7 +87,8 @@ impl Parser {
           self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower)        ||
           self.at(tokens).tokenvalue==TokenValue::Operator(Operator::GreaterEqual) ||
           self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual)   ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::DoubleDot) {
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::DoubleDot)    ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::RightArrow) {
       left = AST::Node{kind: AST::NodeKind::BinaryExpression{
         left: Box::new(left),
         operator: match self.eat(tokens).tokenvalue {
@@ -214,8 +237,9 @@ impl Parser {
             },
             TokenType::OpenSParen => {
               childs.push(Box::new(self.parse_expr(tokens)));
-            },*/
-            _ => {childs.push(Box::new(self.parse_additive_expr(tokens)));},
+            },
+            */
+            _ => {childs.push(Box::new(self.parse_expr(tokens)));},
             //_ => {break;}
           }
         }
@@ -227,7 +251,7 @@ impl Parser {
             _ => {childs.push(Box::new(self.parse_expr(tokens)));}
           }
         }*/
-        AST::Node {kind: AST::NodeKind::Identifier{symbol: eat.tokenvalue.to_string(), childs: childs}}
+        AST::Node {kind: AST::NodeKind::Identifier{symbol: eat.tokenvalue.to_string(), childs}}
       },
 
       TokenType::Nullus => AST::Node {kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}},
@@ -254,9 +278,10 @@ impl Parser {
       TokenType::OpenCParen => {
           //make it own type tbh
           let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
+          //let is_config = true;
           while self.at(tokens).tokentype!=TokenType::CloseCParen {
-
-            match self.parse_stmt(tokens).kind {
+            let eval =  self.parse_stmt(tokens);
+            match eval.kind {
               AST::NodeKind::FunctionDeclaration{identifier, statement} => {
                 let left = *identifier.clone();
                 let right = *statement.clone();
@@ -264,7 +289,8 @@ impl Parser {
               },
               //AST::NodeKind::NullLiteral{..} => {},
               //_ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
-              _ => {},
+              _ => {
+              },
             };
 
             

@@ -8,15 +8,13 @@ fokfetch = {
   ];
 };
 
-parse_display:: [[char]] -> [char];
 parse_display [] = "";
 parse_display (c:display) = c : "\n" : parse_display display;
 
-cursorToData = "\0x1b[??";
+cursorToData = "\0x1b[5C";
 
 if fokfetch.enable {
-  os_data = parse_data $ read_file /etc/os-release;
-  ascii = os_data
+
   print cursorToData;
   println $ parse_display fokfetch.display;
 }

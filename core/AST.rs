@@ -18,6 +18,8 @@ pub enum NodeKind {
   Config{arguments: Vec<(Box<Node>, Box<Node>)>},
   Access{parent: Box<Node>, value: Box<Node>},
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
+  TypeDeclaration{identifier: Box<Node>, ftype: Box<Node>},
+  IfStatement{condition: Box<Node>, body: Box<Node> /*specific Config*/},
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum NodeValue {
@@ -170,7 +172,16 @@ impl NodeKind {
         }
       },
       NodeKind::Identifier{symbol,..} => symbol.to_string(),
-      _ => panic!("display not implemented")
+      NodeKind::List{body} => {
+        let mut result = String::from("[");
+        
+
+        for i in body {
+          result+=&(i.kind.display()+" ")
+        }
+        result+"]"
+      },
+      _ => panic!("display not implemented for: {:#?}", self)
     }
 
   }
