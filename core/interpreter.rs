@@ -45,9 +45,29 @@ impl Interpreter {
       AST::NodeKind::Access{..} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
       AST::NodeKind::TypeDeclaration{identifier: _, ftype: _} => self.evaluate_function(node, env),
+      AST::NodeKind::IfStatement{..} => self.evaluate_if(node,env),
       AST::NodeKind::Char{..} => self.evaluate_char(node, env),
       AST::NodeKind::Bool{..} => self.evaluate_bool(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
+    }
+  }
+  fn evaluate_if(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
+    match node.kind {
+      AST::NodeKind::IfStatement{condition, body} => {
+        match self.evaluate(*condition, env).value {
+          AST::Fructa::Condicio(b) => {
+            if b {
+              return self.evaluate(*body.clone(), env);
+            };
+            AST::Proventus{value: AST::Fructa::Nullus, id: -1}
+          },
+          AST::Fructa::Nullus => {
+            AST::Proventus{value: AST::Fructa::Nullus, id: -1}
+          },
+          _ => self.evaluate(*body.clone(), env)
+        }
+      }
+      _ => panic!("help")
     }
   }
   fn evaluate_bool(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
@@ -373,7 +393,8 @@ impl Interpreter {
     match val.value {
       AST::Fructa::Numerum(i) => AST::Node{kind: AST::NodeKind::NumericLiteral{value: AST::NodeValue::Integer(i)}},
       AST::Fructa::Inventarii(i) => {let mut n = vec![]; for x in i.clone() { n.push(Box::new(self.reverse_eval(x)))}; AST::Node{kind: AST::NodeKind::List{body: n}}},
-      _ => panic!("Reverse evaluation not implemented for.. whatever you supplied dummy")
+      AST::Fructa::Ustulo(c) => AST::Node{kind: AST::NodeKind::Char{value: AST::NodeValue::Char(c)}},
+      _ => panic!("Reverse evaluation not implemented for.. whatever you supplied dummy: {:#?}", val)
     }
   }
   fn soft_evaluate(&mut self, node: AST::Node, id: AST::Node, env: &mut Environment) -> AST::Node {
@@ -716,6 +737,7 @@ impl Interpreter {
       AST::NodeKind::Config{arguments} => {
         let mut args: Vec<(AST::Node, AST::Proventus)> = vec![];
         for i in arguments {
+          
           args.push((*i.0.clone(), self.evaluate(*i.1.clone(), env)));
         }
         AST::Proventus{value: AST::Fructa::Causor(args), id: -1}

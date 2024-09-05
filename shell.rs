@@ -38,7 +38,7 @@ fn main() {
 
     let mut parsed_input = parser.parse(tokenized_input);
 
-    //println!("Parser Out: {:#?}", parsed_input);
+    println!("Parser Out: {:#?}", parsed_input);
 
     let mut interpreted_input = interpreter.evaluate(parsed_input, &mut env);
     //println!("Interpreter Out: {:#?}", interpreted_input);

@@ -43,19 +43,33 @@ impl Parser {
   }
 
   pub fn parse_stmt(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
-    let mut left = self.parse_type_declaration(tokens);
+    let mut left = self.parse_hstmts(tokens);
     if self.at(tokens).tokenvalue == TokenValue::Operator(Operator::Equal) {
         let _ = self.eat(tokens); // get rid of `=`
         let function_id = left;
         
 
-        let statement = self.parse_type_declaration(tokens); // get the function
+        let statement = self.parse_hstmts(tokens); // get the function
 
         //println!("FUNCTION PARS:  {:#?}, {:#?}, {:#?}",function_id,args, statement);
         return AST::Node{kind: AST::NodeKind::FunctionDeclaration {identifier: Box::new(function_id), /*arguments: args, */statement: Box::new(statement)}    }
         //panic!("impl a Function here");
     }
     return left
+  }
+  pub fn parse_hstmts(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
+    let mut left = AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}};
+    if self.at(tokens).tokentype == TokenType::If {
+      let _ = self.eat(tokens);
+
+      left = AST::Node{kind:AST::NodeKind::IfStatement {
+        condition: Box::new(self.parse_type_declaration(tokens)),
+        body: Box::new(self.parse_type_declaration(tokens)),
+      }};
+    } else {
+      left = self.parse_type_declaration(tokens);
+    }
+    left
   }
   pub fn parse_type_declaration(&mut self, tokens: &mut Vec<Token>) -> AST::Node {
     let mut left = self.parse_statements(tokens); // Function
@@ -229,7 +243,7 @@ impl Parser {
             },
             TokenType::ArgumentDivisor =>  {
               self.eat(tokens);
-              childs.push(Box::new(self.parse_stmt(tokens)));
+              childs.push(Box::new(self.parse_hstmts(tokens)));
             },
             /*
             TokenType::Integer => {
@@ -239,7 +253,7 @@ impl Parser {
               childs.push(Box::new(self.parse_expr(tokens)));
             },
             */
-            _ => {childs.push(Box::new(self.parse_expr(tokens)));},
+            _ => {childs.push(Box::new(self.parse_hstmts(tokens)));},
             //_ => {break;}
           }
         }
@@ -276,28 +290,28 @@ impl Parser {
         return AST::Node{kind: AST::NodeKind::List {body: args}};
       },
       TokenType::OpenCParen => {
-          //make it own type tbh
-          let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
-          //let is_config = true;
-          while self.at(tokens).tokentype!=TokenType::CloseCParen {
-            let eval =  self.parse_stmt(tokens);
-            match eval.kind {
-              AST::NodeKind::FunctionDeclaration{identifier, statement} => {
-                let left = *identifier.clone();
-                let right = *statement.clone();
-                args.push((Box::new(left), Box::new(right) ));
-              },
-              //AST::NodeKind::NullLiteral{..} => {},
-              //_ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
-              _ => {
-              },
-            };
-
-            
-            
-          }
-          self.eatExpect(TokenType::CloseCParen, "Invalid token".to_string(), tokens);
-          return AST::Node{kind: AST::NodeKind::Config {arguments: args}}
+        //make it own type tbh
+        let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
+        //let is_config = true;
+        while self.at(tokens).tokentype!=TokenType::CloseCParen {
+          let eval =  self.parse_stmt(tokens);
+          match eval.kind {
+            AST::NodeKind::FunctionDeclaration{identifier, statement} => {
+              let left = *identifier.clone();
+              let right = *statement.clone();
+              args.push((Box::new(left), Box::new(right) ));
+            },
+            //AST::NodeKind::NullLiteral{..} => {},
+            //_ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
+            _ => {
+              let left = AST::Node{kind: AST::NodeKind::Identifier{symbol: String::from("FOKO_EVALUATE_NODE_I_WILL_KRILL"), childs: vec![]}};
+              let right = eval;
+              args.push((Box::new(left), Box::new(right) ));
+            },
+          };
+        }
+        self.eatExpect(TokenType::CloseCParen, "Invalid token".to_string(), tokens);
+        AST::Node{kind: AST::NodeKind::Config {arguments: args}}
       },
       TokenType::Char => {
           match eat.tokenvalue {
@@ -329,12 +343,5 @@ impl Parser {
     }
   }
 }
-
-
-
-
-
-
-
 
 

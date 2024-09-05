@@ -8,13 +8,15 @@ fokfetch = {
   ];
 };
 
-parse_display [] = "";
-parse_display (c:display) = c : "\n" : parse_display display;
 
-cursorToData = "\0x1b[5C";
+parsedisplay [] = [];
+parsedisplay (c:display) = c : "\n" : (parsedisplay display);
 
-if fokfetch.enable {
+cursorToData = "";
+
+
+if (fokfetch.enable) {
 
   print cursorToData;
-  println $ parse_display fokfetch.display;
-}
+  println $ parsedisplay (fokfetch.display);
+};
