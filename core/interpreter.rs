@@ -563,7 +563,9 @@ impl Interpreter {
                     final_function.value = AST::Fructa::Moenus(new_args.clone(), self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, *item.clone(), &mut one_arg_env));
                     final_function.value = AST::Fructa::Moenus(new_args, self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(args, statement) => statement, _ => panic!("huh")}, *list.clone(), &mut one_arg_env));
                   },
-                  _ => {}
+                  _ => {
+                  final_function.value = AST::Fructa::Moenus(new_args, match final_function.value { AST::Fructa::Moenus(args, statement) => statement, _ => panic!("??")});
+                  }
                 }
                 
                 final_call = AST::Node{kind: AST::NodeKind::Identifier{symbol: symbol.clone(), 
