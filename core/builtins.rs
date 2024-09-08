@@ -2,6 +2,7 @@ use core::AST::{*};
 use core::env::Environment;
 use core::interpreter::Interpreter;
 
+use std::{process::Command, str, fs, collections::HashMap}; // TEMPORARY SOLUTION
 
 
 pub fn print(arguments: Arguments) -> Proventus {
@@ -146,6 +147,37 @@ pub fn tail(arguments: Arguments) -> Proventus {
 
 }
 
+fn combine_list_to_string(a: Proventus) -> String {
+  match a.value {
+    Fructa::Inventarii(l) => {
+      let mut result = String::new();
+      for i in l {
+        result += &match i.value {
+          Fructa::Ustulo(c) => c.to_string(),
+          Fructa::Numerum(i) => i.to_string(),
+          _ => String::new()
+        };
+      }
+      result
+    }
+    _ => panic!("????????")
+  }
+}
+
+pub fn replace(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::replace(value, to_replace, replacement) => {
+      let val = combine_list_to_string(value).replace(&combine_list_to_string(to_replace), &combine_list_to_string(replacement));
+      let mut result: Vec<Proventus> = vec![];
+      for i in val.chars() {
+        result.push(Proventus{value: Fructa::Ustulo(i), id:-1});
+      }
+      Proventus{value: Fructa::Inventarii(result), id: -1}
+    }
+    _ => panic!("not taking that bs")
+  }
+}
+
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
   match arguments.function {
@@ -241,16 +273,128 @@ pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environ
       ), id:-2});
 }
 
+fn parseConf(conf: String) -> HashMap<String, String> {
+  let mut result: HashMap<String, String> = HashMap::new();
+  for i in conf.split("\n") {
+    if i.contains("=") {
+      result.insert(i.to_string().split("=").collect::<Vec<&str>>()[0].to_string(),
+      i.to_string().split("=").collect::<Vec<&str>>()[1].split("\0").collect::<Vec<&str>>()[0].to_string());//.split("\"").collect::<Vec<&str>>()[1].to_string());
+    }
+  }
+
+  return result;
+}
+
+fn parseCPUInfo(conf: String) -> HashMap<String, String> {
+  let mut result: HashMap<String, String> = HashMap::new();
+  for i in conf.split("\n") {
+    if i.contains(":") {
+      result.insert(i.to_string().split(":").collect::<Vec<&str>>()[0].to_string().replace("\t",""),
+      i.to_string().split(":").collect::<Vec<&str>>()[1].split("\0").collect::<Vec<&str>>()[0].to_string());//.split("\"").collect::<Vec<&str>>()[1].to_string());
+    }
+  }
+
+  return result;
+}
+
 pub fn declare_builtins(env: &mut Environment) {
   let functions = vec![
     (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
     (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
-    (String::from("t"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
-    (String::from("tail"), tail),
+    (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
+    (String::from("tail"), tail), (String::from("replace"), replace),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
   }
+  
+  let mut s_kernel_version = fs::read_to_string("/proc/version").unwrap().split(" ").collect::<Vec<&str>>()[2].to_string();
+
+  let mut cpuinfo = parseCPUInfo(fs::read_to_string("/proc/cpuinfo").unwrap().split("\n\n").collect::<Vec<&str>>()[0].to_string());
+
+  let os_release = parseConf(fs::read_to_string("/etc/os-release").unwrap());
+  
+
+  let whoami = Command::new("sh").arg("-c").arg("whoami").output().unwrap();
+  let hostname = Command::new("sh").arg("-c").arg("hostname").output().unwrap();
+  let s_username = str::from_utf8(&whoami.stdout).unwrap().replace("\n","");
+  let s_hostname = str::from_utf8(&hostname.stdout).unwrap().replace("\n","");
+
+  let s_uptime = fs::read_to_string("/proc/uptime").unwrap().split(" ").collect::<Vec<&str>>()[0].to_string(); // TODO: make it a function!!
+  //println!("{:#?}", cpuinfo);
+  let s_cpumodel = cpuinfo.get("model name").unwrap();
+
+
+  let mut s_pretty_name = os_release.get("PRETTY_NAME").unwrap().replace("\n","");
+
+  
+  //get rid of quotes
+  let mut ch_pretty_name = s_pretty_name.chars();
+  ch_pretty_name.next();
+  ch_pretty_name.next_back();
+
+  s_pretty_name = ch_pretty_name.collect::<String>();
+
+
+
+  let mut username: Vec<Proventus> = vec![];
+  for i in s_username.chars() {
+    username.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
+  
+  let mut hostname: Vec<Proventus> = vec![];
+  for i in s_hostname.chars() {
+    hostname.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
+
+  let mut pretty_name: Vec<Proventus> = vec![];
+  for i in s_pretty_name.chars() {
+    pretty_name.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
+
+  let mut kernel_version: Vec<Proventus> = vec![];
+  for i in s_kernel_version.chars() {
+    kernel_version.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
+
+  let mut cpumodel: Vec<Proventus> = vec![];
+  let mut cpu_chars = s_cpumodel.chars();
+  cpu_chars.next(); // skip 1st space
+  for i in cpu_chars {
+    cpumodel.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
+
+  let mut uptime: Vec<Proventus> = vec![];
+  for i in s_uptime.chars() {
+    uptime.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
+
+
+
+  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("globals"), childs: vec![]}},
+      Proventus{value: Fructa::Causor(
+        vec![
+          (Node{kind: NodeKind::Identifier{symbol: String::from("user"), childs: vec![]}}, Proventus{value: Fructa::Causor(
+            vec![
+              (Node{kind: NodeKind::Identifier{symbol: String::from("username"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(username), id:-5}),
+              (Node{kind: NodeKind::Identifier{symbol: String::from("hostname"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(hostname), id:-5}),
+            ]
+          ), id: -5}),
+          (Node{kind: NodeKind::Identifier{symbol: String::from("os"), childs: vec![]}}, Proventus{value: Fructa::Causor(
+            vec![
+              (Node{kind: NodeKind::Identifier{symbol: String::from("prettyname"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(pretty_name), id:-5}),
+              (Node{kind: NodeKind::Identifier{symbol: String::from("kernel"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(kernel_version), id:-5}),
+              (Node{kind: NodeKind::Identifier{symbol: String::from("uptime"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(uptime), id:-5}),
+            ]
+          ), id: -5}),
+          (Node{kind: NodeKind::Identifier{symbol: String::from("hardware"), childs: vec![]}}, Proventus{value: Fructa::Causor(
+            vec![
+              (Node{kind: NodeKind::Identifier{symbol: String::from("cpu"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(cpumodel), id:-5}),
+            ]
+          ), id: -5}),
+
+        ]
+      ), id:-5});
 }
 
 
@@ -273,5 +417,6 @@ pub enum FunctionArgs {
   //read_file(Proventus), 
   length(Proventus),                                    // (list)
   take(Proventus, Proventus),                           // (amount, list)
-  headTail(Proventus),                                      // (list),
+  headTail(Proventus),                                  // (list),
+  replace(Proventus, Proventus, Proventus)              // (list,list,list)
 }

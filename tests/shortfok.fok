@@ -2,21 +2,48 @@ fokfetch = {
   enable = true;
   backend = "ascii";
   display = [
-    "/========<{username}@{hostname}>========/"
+    "/================<{username}@{hostname}>================/"
     "OS: {os}"
-    "/========<{blank-username}@{blank-hostname}>========/"
+    "Kernel: {kernel}"
+    "CPU: {cpu}"
+    "Uptime: {uptime}"
+    "/================<{blank-username} {blank-hostname}>================/"
   ];
 };
 
 
-parsedisplay [] = [];
-parsedisplay (c:display) = c : "\n" : (parsedisplay display);
 
-cursorToData = "";
+parsedisplay [] = " ";
+parsedisplay (c:display) = c : "\n" : cursorToData : (parsedisplay display);
 
+cursorToData = "\x1b[5C";
+
+repeat chr 0 = "";
+repeat chr n = chr:(repeat chr (n-1));
+
+
+injectUser template = "":(replace (
+                        replace ( 
+                          replace (
+                            replace template "{username}" (globals.user.username)
+                          ) "{blank-username}" (repeat ' ' (length (globals.user.username)))
+                        ) "{hostname}" (globals.user.hostname)
+                      ) "{blank-hostname}" (repeat ' ' (length (globals.user.hostname))));
+
+injectOS template = "":(replace (
+                          replace (
+                            replace template "{os}" (globals.os.prettyname)
+                          ) "{kernel}" (globals.os.kernel)
+                        ) "{uptime}" (globals.os.uptime));
+
+injectHardware template = "":(replace (
+                                template
+                              ) "{cpu}" (globals.hardware.cpu));
+
+injectAll template = "":(injectUser $ injectHardware $ injectOS template);
 
 if (fokfetch.enable) {
 
   print cursorToData;
-  println $ parsedisplay (fokfetch.display);
+  println $ injectAll $ parsedisplay (fokfetch.display);
 };

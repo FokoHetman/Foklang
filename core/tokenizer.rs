@@ -96,7 +96,7 @@ impl Tokenizer {
   }
 
   pub fn tokenize(self, input: String) -> Vec<Token> {
-    let mut list_input = input.split("").collect::<Vec<&str>>();
+    let mut list_input: Vec<char> = input.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "\'").replace("\\x1b", "\x1b").chars().collect();
     let mut tokens: Vec<Token> = [].to_vec();
     let mut pass;
     let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false))), (String::from("if"), (TokenType::If, TokenValue::Nullus))]);
@@ -104,36 +104,36 @@ impl Tokenizer {
       pass = false;
       let current_char = list_input[0];
       match current_char {
-        "[" => {
+        '[' => {
           tokens.push(Token{tokentype: TokenType::OpenSParen, tokenvalue: TokenValue::Nullus});
         },
-        "]" => {
+        ']' => {
           tokens.push(Token{tokentype: TokenType::CloseSParen, tokenvalue: TokenValue::Nullus});
         },
-        "{" => {
+        '{' => {
           tokens.push(Token{tokentype: TokenType::OpenCParen, tokenvalue: TokenValue::Nullus});
         },
-        "}" => {
+        '}' => {
           tokens.push(Token{tokentype: TokenType::CloseCParen, tokenvalue: TokenValue::Nullus});
         },
-        "(" => {
+        '(' => {
           tokens.push(Token{tokentype: TokenType::OpenParen, tokenvalue: TokenValue::Nullus});
         },
-        ")" => {
+        ')' => {
           tokens.push(Token{tokentype: TokenType::CloseParen, tokenvalue: TokenValue::Nullus});
         },
-        "." => {
+        '.' => {
           match list_input[1] {
-            "." => {
+            '.' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DoubleDot)});
             }
             _ => {tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::SingleDot)});}
           }
         },
-        "=" => {
+        '=' => {
           match list_input[1] {
-            "=" => {
+            '=' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Comparision)});
             },
@@ -142,12 +142,12 @@ impl Tokenizer {
             }
           }
         },
-        "+" => {
+        '+' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Addition)});
         },
-        "-" => {
+        '-' => {
           match list_input[1] {
-            ">" => {
+            '>' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::RightArrow)});
             },
@@ -156,40 +156,52 @@ impl Tokenizer {
             }
           }
         },
-        "*" => {
+        '*' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Multiplication)});
         },
-        "/" => {
+        '/' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Division)});
         },
-        "^" => {
+        '^' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Exponentiation)});  
         },
-        ";" => {
+        ';' => {
           tokens.push(Token{tokentype: TokenType::SemiColon, tokenvalue: TokenValue::Nullus});
         },
-        "'" => {
+
+        '\'' => {
           list_input.remove(0);
-          let char = list_input[0];
+          let chr = list_input[0];
           list_input.remove(0);
-          if list_input[0]!="'" {
+          /*match chr {
+            '\\' => {
+              chr = match list_input[0] {
+                'n' => '\n',
+                't' => '\t',
+                '
+              };
+              list_input.remove(0);
+            },
+            _ => {}
+          }*/
+          if list_input[0]!='\'' {
             panic!("tf you doing");
           }
-          tokens.push(Token{tokentype: TokenType::Char, tokenvalue: TokenValue::Char(char.chars().collect::<Vec<char>>()[0])});
+          tokens.push(Token{tokentype: TokenType::Char, tokenvalue: TokenValue::Char(chr)});
         },
-        "\"" => {
+        '"' => {
           let mut deval = String::new();
           list_input.remove(0);
-          while list_input[0]!="\"" {
-            deval+=list_input[0];
+          while list_input[0]!='"' {
+            deval+=&list_input[0].to_string();
             list_input.remove(0);
           }
           tokens.push(Token{tokentype: TokenType::String, tokenvalue: TokenValue::String(deval)});
         },
-        ">" => {
+        '>' => {
 
           match list_input[1] {
-            "=" => {
+            '=' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::GreaterEqual)});
             },
@@ -198,13 +210,13 @@ impl Tokenizer {
             }
           }
         },
-        "<" => {
+        '<' => {
           match list_input[1] {
-            "=" => {
+            '=' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::LowerEqual)});
             },
-            "-" => {
+            '-' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::LeftArrow)});
             },
@@ -213,12 +225,12 @@ impl Tokenizer {
             }
           }
         },
-        "$" => {
+        '$' => {
           tokens.push(Token{tokentype: TokenType::ArgumentDivisor, tokenvalue: TokenValue::Nullus});
         },
-        ":" => {
+        ':' => {
           match list_input[1] {
-            ":" => {
+            ':' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DoubleColon)});
             },
@@ -231,8 +243,8 @@ impl Tokenizer {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());
           if self.is_numeric(list_input[0].to_string()) {
             let mut tmp_num: String = String::new();
-            while list_input.len()>0 && char::from_str(list_input[0]).unwrap().is_numeric() {
-              tmp_num+=list_input[0];
+            while list_input.len()>0 && list_input[0].is_numeric() {
+              tmp_num+=&list_input[0].to_string();
               list_input.remove(0);
             }
             tokens.push(Token{tokentype: TokenType::Integer, tokenvalue: TokenValue::Int(tmp_num.parse::<i32>().unwrap())});
@@ -240,7 +252,7 @@ impl Tokenizer {
           else if self.is_alpha(list_input[0].to_string()) {
             let mut tmp_ident: String = String::new();
             while list_input.len()>0 && self.is_identifier(list_input[0].to_string()) {
-              tmp_ident+=list_input[0];
+              tmp_ident+=&list_input[0].to_string();
               list_input.remove(0);
             }
             if speciales.contains_key(&tmp_ident) {

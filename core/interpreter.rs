@@ -1,7 +1,7 @@
 use core::AST;
 use core::error_handler::ErrorHandler;
 use core::tokenizer::{Operator};
-use std::convert::TryInto;
+use std::{convert::TryInto};
 use core::env::Environment;
 use core::builtins;
 
@@ -175,8 +175,12 @@ impl Interpreter {
 
         match (*statement).kind {
           AST::NodeKind::Identifier{..} => {
-            let eval = self.evaluate(*statement, env);
-            env.declare(*identifier, eval);
+            if env.exists(*statement.clone()) {
+              let eval = self.evaluate(*statement, env);
+              env.declare(*identifier, eval);
+            } else {
+              env.declare(*identifier, AST::Proventus{value: AST::Fructa::Moenus(unboxed_args, *statement),id:-1});
+            }
           }
           _ => {
             env.declare(*identifier, AST::Proventus{value: AST::Fructa::Moenus(unboxed_args, *statement),id:-1});
@@ -688,6 +692,8 @@ impl Interpreter {
           fargs = builtins::FunctionArgs::length(self.evaluate(args_vec[0].clone(), env));
         } else if f == builtins::take {
           fargs = builtins::FunctionArgs::take(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(),env));
+        } else if f == builtins::replace {
+          fargs = builtins::FunctionArgs::replace(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env), self.evaluate(args_vec[2].clone(), env));
         };
 
         let args = builtins::Arguments{function: fargs};
@@ -701,6 +707,7 @@ impl Interpreter {
       AST::Fructa::Inventarii(i) => { result = AST::Proventus {value: AST::Fructa::Inventarii(i), id: -1}},
       AST::Fructa::Numerum(i) => { result = AST::Proventus {value: AST::Fructa::Numerum(i), id: -1}},
       AST::Fructa::Condicio(i) => { result = AST::Proventus {value: AST::Fructa::Condicio(i), id: -1}},
+      AST::Fructa::Causor(i) => { result = AST::Proventus {value: AST::Fructa::Causor(i), id: -1}},
       _ => panic!("damn")
       }
     }

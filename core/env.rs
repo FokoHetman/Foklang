@@ -63,6 +63,27 @@ impl Environment {
       _ => panic!("huh")
     }
   }
+  pub fn exists(&self, identifier: AST::Node) -> bool {
+    match identifier.kind {
+      AST::NodeKind::Identifier{symbol: ref s, ..} => {
+        for i in &self.functions {
+          if match &i.0.kind {
+            AST::NodeKind::Identifier{symbol: s2, ..} => {
+              *s==*s2
+            },
+            _ => false,
+          } {
+            return true
+          }
+        };
+        match &self.parent {
+          Some(parent) => parent.exists(identifier),
+          None => false,
+        }
+      }
+      _ => false,
+    }
+  }
   pub fn get(&self, identifier: AST::Node) -> Vec<AST::Proventus> {
     let env = self.resolve(identifier.clone());
     match identifier.kind {
