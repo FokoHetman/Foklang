@@ -42,6 +42,6 @@ fn main() {
 
     let mut interpreted_input = interpreter.evaluate(parsed_input, &mut env);
     //println!("Interpreter Out: {:#?}", interpreted_input);
-    core::builtins::println(core::builtins::Arguments{function: core::builtins::FunctionArgs::print(vec![interpreted_input])});
+    core::builtins::println(core::builtins::Arguments{function: core::builtins::FunctionArgs::many(vec![interpreted_input])});
   }
 }

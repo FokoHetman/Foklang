@@ -631,9 +631,9 @@ impl Interpreter {
 
 
         }
-      AST::Fructa::BuiltIn(f) => {
+      AST::Fructa::BuiltIn(f, cached_args) => {
         //if f==core::builtins::get {
-        let mut args_vec: Vec<AST::Node> = vec![];
+        let mut args_vec: Vec<AST::Node> = cached_args;
         match node.kind {
           AST::NodeKind::Identifier{ref symbol, ref childs} => {
             for i in childs {
@@ -651,64 +651,121 @@ impl Interpreter {
           };*/
         let mut fargs = builtins::FunctionArgs::zerum();
         
+
+        let mut expected: i32 = 0;
+        let got = args_vec.len() as i32;
+        let null_filler = AST::Proventus{value: AST::Fructa::Nullus, id: -2};
         if f == builtins::print {
           let mut n_args: Vec<AST::Proventus> = vec![];
-          for i in args_vec {
+          for i in args_vec.clone() {
             //parse types!!
             n_args.push(self.evaluate(i, env));
           }
-          fargs = builtins::FunctionArgs::print(n_args);
+          fargs = builtins::FunctionArgs::many(n_args);
+          expected = -1;
 
         } else if f == builtins::get {
-          fargs = builtins::FunctionArgs::get(self.evaluate(args_vec[0].clone(), env), 
+          if args_vec.len() >= 2 {
+            fargs = builtins::FunctionArgs::double(self.evaluate(args_vec[0].clone(), env), 
               AST::Proventus{value: match args_vec[1].clone().kind { AST::NodeKind::Identifier{symbol,..} => AST::Fructa::Filum(symbol),
               AST::NodeKind::NumericLiteral{value} => match value { AST::NodeValue::Integer(i) => AST::Fructa::Numerum(i), _ => AST::Fructa::Numerum(0)}, 
               _ => AST::Fructa::Nullus}, id: -1});
-
+          } else {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 2;
         } else if f == builtins::println {
           let mut n_args: Vec<AST::Proventus> = vec![];
-          for i in args_vec {
+          for i in args_vec.clone() {
             n_args.push(self.evaluate(i, env));
           }
-          fargs = builtins::FunctionArgs::print(n_args);
+          fargs = builtins::FunctionArgs::many(n_args);
+          expected = -1;
 
         } else if f == builtins::fmap {
-          fargs = builtins::FunctionArgs::fmap(args_vec[0].clone(), self.evaluate(args_vec[1].clone(), env), env.clone(), self.clone());
-
+         if args_vec.len() >= 2 {
+            fargs = builtins::FunctionArgs::fmap(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env), env.clone(), self.clone());
+         } else if args_vec.len() == 1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 2;
         } else if f == builtins::join {
           let mut n_args: Vec<AST::Proventus> = vec![];
-          for i in args_vec {
+          for i in args_vec.clone() {
             n_args.push(self.evaluate(i, env));
           }
-          fargs = builtins::FunctionArgs::join(n_args);
+          fargs = builtins::FunctionArgs::many(n_args);
+          expected = -1;
         } else if f == builtins::returnfn {
-          fargs = builtins::FunctionArgs::returnfn(self.evaluate(args_vec[0].clone(), env));
+          if args_vec.len() >= 1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 1;  
         } else if f == builtins::type_of {
           //println!("{:#?}", args_vec.clone());
-          fargs = builtins::FunctionArgs::type_of(self.evaluate(args_vec[0].clone(), env));
+          if args_vec.len() >= 1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 1;
         } else if f == builtins::head || f==builtins::tail {
-          fargs = builtins::FunctionArgs::headTail(self.evaluate(args_vec[0].clone(), env));
+          if args_vec.len() >= 1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 1;
         } else if f == builtins::length {
-          fargs = builtins::FunctionArgs::length(self.evaluate(args_vec[0].clone(), env));
+          if args_vec.len()>=1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 1;
         } else if f == builtins::take {
-          fargs = builtins::FunctionArgs::take(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(),env));
+          if args_vec.len()>=2 {
+            fargs = builtins::FunctionArgs::double(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env));
+          } else if args_vec.len()==1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 2;
         } else if f == builtins::replace {
-          fargs = builtins::FunctionArgs::replace(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env), self.evaluate(args_vec[2].clone(), env));
+          if args_vec.len()>=3 {
+            fargs = builtins::FunctionArgs::triple(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env), self.evaluate(args_vec[2].clone(), env));
+          } else if args_vec.len() == 2 {
+            fargs = builtins::FunctionArgs::double(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env));
+          } else if args_vec.len() == 1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 3;
+
+        } else if f == builtins::split {
+          if args_vec.len()>=2 {
+            fargs = builtins::FunctionArgs::double(self.evaluate(args_vec[0].clone(), env), self.evaluate(args_vec[1].clone(), env));
+          } else if args_vec.len()==1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 2;
+        } else if f == builtins::to_int {
+          if args_vec.len()>=1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
+          }
+          expected = 1;
         };
 
-        let args = builtins::Arguments{function: fargs};
-        result = f(args)
-          //panic!("builtin")
+       if got>=expected {
+
+          let args = builtins::Arguments{function: fargs};
+         result = f(args)
+        } else {
+          result = AST::Proventus{value: AST::Fructa::BuiltIn(f, args_vec), id: -1};
+        }
+        //panic!("builtin")
         /*} else if f==core::builtins::print {
           
-
+          
         }*/
       }
       AST::Fructa::Inventarii(i) => { result = AST::Proventus {value: AST::Fructa::Inventarii(i), id: -1}},
       AST::Fructa::Numerum(i) => { result = AST::Proventus {value: AST::Fructa::Numerum(i), id: -1}},
       AST::Fructa::Condicio(i) => { result = AST::Proventus {value: AST::Fructa::Condicio(i), id: -1}},
       AST::Fructa::Causor(i) => { result = AST::Proventus {value: AST::Fructa::Causor(i), id: -1}},
-      _ => panic!("damn")
+      _ => panic!("damn: {:#?}", variation)
       }
     }
     result

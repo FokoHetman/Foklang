@@ -7,7 +7,7 @@ use std::{process::Command, str, fs, collections::HashMap}; // TEMPORARY SOLUTIO
 
 pub fn print(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::print(args) => {
+    FunctionArgs::many(args) => {
       for i in args {
         print!("{}", i.value.display());
         /*match i.value {
@@ -24,7 +24,7 @@ pub fn print(arguments: Arguments) -> Proventus {
 
 pub fn returnfn(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::returnfn(value) => {
+    FunctionArgs::single(value) => {
       return value
     },
     _ => panic!("dumbass interpreter")
@@ -32,7 +32,7 @@ pub fn returnfn(arguments: Arguments) -> Proventus {
 }
 pub fn println(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::print(args) => {
+    FunctionArgs::many(args) => {
       for i in args {
         println!("{}", i.value.display());
       }
@@ -42,35 +42,32 @@ pub fn println(arguments: Arguments) -> Proventus {
   Proventus{value: Fructa::Nullus, id: -2}
 }
 
+
+
 pub fn fmap(arguments: Arguments) -> Proventus {
   match arguments.function {
     FunctionArgs::fmap(fun, list, env, mut interpreter) => {
-      match fun.kind {
-        NodeKind::Identifier{symbol, ..} => {
+     match fun.value {
+        Fructa::Moenus(args, statement) => {
           match list.value {
             Fructa::Inventarii(inv) => {
               let mut result: Vec<Proventus> = vec![];
               for i in inv {
-                match &env.get(Node{kind: NodeKind::Identifier{symbol: symbol.clone(), childs: vec![]}}).into_iter().rev().collect::<Vec<Proventus>>()[0].value {
-                  Fructa::Moenus(args, statement) => {
-                    let mut function_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
-                    if args.len()>1 {
-                      match i.value {
-                        Fructa::Inventarii(body) => {
-                          for x in 0..args.len() {
-                            function_env.declare(args[x].clone(), body[x].clone());
-                          }
-                        }
-                        _ => panic!("iterating not implemented for whatever you tried lmao")
+                let mut function_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+                if args.len()>1 {
+                  match i.value {
+                    Fructa::Inventarii(body) => {
+                      for x in 0..args.len() {
+                        function_env.declare(args[x].clone(), body[x].clone());
                       }
-                    } else {
-                      function_env.declare(args[0].clone(), i);
                     }
-
-                    result.push(interpreter.evaluate(statement.clone(), &mut function_env));
+                    _ => panic!("iterating not implemented for whatever you tried lmao")
                   }
-                  _ => panic!("supra nova")
+                } else {
+                  function_env.declare(args[0].clone(), i);
                 }
+
+                result.push(interpreter.evaluate(statement.clone(), &mut function_env));
               }
               return Proventus{value: Fructa::Inventarii(result), id: -1};
             }
@@ -87,7 +84,7 @@ pub fn fmap(arguments: Arguments) -> Proventus {
 
 pub fn length(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::length(list) => {
+    FunctionArgs::single(list) => {
       match list.value {
         Fructa::Inventarii(l) => {
           Proventus{value: Fructa::Numerum(l.len() as i32), id: -1}
@@ -101,7 +98,7 @@ pub fn length(arguments: Arguments) -> Proventus {
 
 pub fn take(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::take(amount, list) => {
+    FunctionArgs::double(amount, list) => {
       match amount.value {
         Fructa::Numerum(i) => {
           match list.value {
@@ -121,7 +118,7 @@ pub fn take(arguments: Arguments) -> Proventus {
 
 pub fn head(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::headTail(list) => {
+    FunctionArgs::single(list) => {
       match list.value {
         Fructa::Inventarii(l) => {
           l[0].clone()
@@ -132,9 +129,10 @@ pub fn head(arguments: Arguments) -> Proventus {
     _ => panic!("interpreter fuck you sincerely")
   }
 }
+
 pub fn tail(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::headTail(list) => {
+    FunctionArgs::single(list) => {
       match list.value {
         Fructa::Inventarii(l) => {
           l.into_iter().rev().collect::<Vec<Proventus>>()[0].clone()
@@ -160,13 +158,32 @@ fn combine_list_to_string(a: Proventus) -> String {
       }
       result
     }
-    _ => panic!("????????")
+    _ => panic!("????????: {:#?}", a)
+  }
+}
+
+pub fn split(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::double(splitter, value) => {
+      let val1 = combine_list_to_string(value);
+      let splits = val1.split(&combine_list_to_string(splitter)).collect::<Vec<&str>>();
+      let mut result: Vec<Proventus> = vec![];
+      for i in splits {
+        let mut res: Vec<Proventus> = vec![];
+        for x in i.chars() {
+          res.push(Proventus{value: Fructa::Ustulo(x), id: -1});
+        }
+        result.push(Proventus{value: Fructa::Inventarii(res), id:-1});
+      }
+      Proventus{value: Fructa::Inventarii(result), id: -1}
+    }
+    _ => panic!("?????????????")
   }
 }
 
 pub fn replace(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::replace(value, to_replace, replacement) => {
+    FunctionArgs::triple(to_replace, replacement, value) => {
       let val = combine_list_to_string(value).replace(&combine_list_to_string(to_replace), &combine_list_to_string(replacement));
       let mut result: Vec<Proventus> = vec![];
       for i in val.chars() {
@@ -181,7 +198,7 @@ pub fn replace(arguments: Arguments) -> Proventus {
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
   match arguments.function {
-    FunctionArgs::get(causor, key) => {
+    FunctionArgs::double(causor, key) => {
       match causor.value {
         Fructa::Causor(arguments) => {
           match key.value {
@@ -220,7 +237,7 @@ pub fn get(arguments: Arguments) -> Proventus {
 
 pub fn join(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::join(mut lists) => {
+    FunctionArgs::many(mut lists) => {
       let mut result = lists[0].clone();
       lists.remove(0);
       match result.value {
@@ -245,7 +262,7 @@ pub fn join(arguments: Arguments) -> Proventus {
 
 pub fn data(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::data(id, params, env) => {
+    FunctionArgs::triple(id, params, env) => {
       //env.declare_type(id,  params);
       Proventus {value: Fructa::Nullus, id: -1}
     }
@@ -255,12 +272,25 @@ pub fn data(arguments: Arguments) -> Proventus {
 
 pub fn type_of(arguments: Arguments) -> Proventus {
   match arguments.function {
-    FunctionArgs::type_of(val) => {
+    FunctionArgs::single(val) => {
       Proventus {value: Fructa::Filum(val.value.display_type()), id: -1}
     }
     _ => panic!("Interpreter error")
   }
 }
+
+
+pub fn to_int(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::single(val) => {
+      let string = combine_list_to_string(val);
+      Proventus {value: Fructa::Numerum(string.parse::<i32>().unwrap()), id: -1}
+    }
+    _ => panic!("?")
+  }
+}
+
+
 
 
 
@@ -269,9 +299,11 @@ pub fn type_of(arguments: Arguments) -> Proventus {
 pub fn declare_fn(id: String, fun: fn(Arguments) -> Proventus, env: &mut Environment) {
   env.declare(Node{kind: NodeKind::Identifier {symbol: id, childs:vec![]}},
       Proventus{value: Fructa::BuiltIn(
-        fun
+        fun, vec![]
       ), id:-2});
 }
+
+
 
 fn parseConf(conf: String) -> HashMap<String, String> {
   let mut result: HashMap<String, String> = HashMap::new();
@@ -297,17 +329,22 @@ fn parseCPUInfo(conf: String) -> HashMap<String, String> {
   return result;
 }
 
+
+
 pub fn declare_builtins(env: &mut Environment) {
   let functions = vec![
     (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
     (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
     (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
-    (String::from("tail"), tail), (String::from("replace"), replace),
+    (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
   }
   
+
+
+
   let mut s_kernel_version = fs::read_to_string("/proc/version").unwrap().split(" ").collect::<Vec<&str>>()[2].to_string();
 
   let mut cpuinfo = parseCPUInfo(fs::read_to_string("/proc/cpuinfo").unwrap().split("\n\n").collect::<Vec<&str>>()[0].to_string());
@@ -403,6 +440,7 @@ pub fn declare_builtins(env: &mut Environment) {
 pub struct Arguments {
   pub function: FunctionArgs,
 }
+/*
 #[derive(Debug)]
 pub enum FunctionArgs {
   returnfn(Proventus),                                  // (value_to_return)
@@ -418,5 +456,16 @@ pub enum FunctionArgs {
   length(Proventus),                                    // (list)
   take(Proventus, Proventus),                           // (amount, list)
   headTail(Proventus),                                  // (list),
-  replace(Proventus, Proventus, Proventus)              // (list,list,list)
+  replace(Proventus, Proventus, Proventus),             // (list,list,list)
+  split(Proventus, Proventus),                          // (list, list) - splitter, list
+}
+*/
+#[derive(Debug)]
+pub enum FunctionArgs {
+  zerum(),
+  single(Proventus),
+  double(Proventus, Proventus),
+  triple(Proventus, Proventus, Proventus),
+  many(Vec<Proventus>),
+  fmap(Proventus, Proventus, Environment, Interpreter),
 }

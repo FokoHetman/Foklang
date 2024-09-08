@@ -92,7 +92,7 @@ impl Tokenizer {
     return string.to_lowercase()!=string.to_uppercase();
   }
   pub fn is_identifier(self, string: String) -> bool {
-    return string.to_lowercase()!=string.to_uppercase() || self.is_numeric(string);
+    return string.to_lowercase()!=string.to_uppercase() || self.is_numeric(string.clone()) || [String::from("_")].contains(&string);
   }
 
   pub fn tokenize(self, input: String) -> Vec<Token> {

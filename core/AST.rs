@@ -42,7 +42,7 @@ pub enum Fructa {
   Filum(String),
   Condicio(bool),
   Moenus(/*Node,*/ Vec<Node>, Node),
-  BuiltIn(fn(builtins::Arguments) -> Proventus),
+  BuiltIn(fn(builtins::Arguments) -> Proventus, /*cached args*/ Vec<Node>),
   Causor(Vec<(Node,Proventus)>),
   Inventarii(Vec<Proventus>),
 }
