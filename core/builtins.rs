@@ -290,6 +290,23 @@ pub fn to_int(arguments: Arguments) -> Proventus {
   }
 }
 
+pub fn to_string(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::single(val) => {
+      let result = match val.value {
+        Fructa::Numerum(i) => i.to_string(),
+        _ =>  String::new()
+      };
+      let mut inventarii: Vec<Proventus> = vec![];
+      for i in result.chars() {
+        inventarii.push(Proventus{value: Fructa::Ustulo(i), id: -1});
+      }
+      Proventus{value: Fructa::Inventarii(inventarii), id: -1}
+    }
+    _ => panic!("?")
+  }
+}
+
 
 
 
@@ -337,10 +354,11 @@ pub fn declare_builtins(env: &mut Environment) {
     (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
     (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
     (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
+    (String::from("toString"), to_string),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
-  }
+    }
   
 
 

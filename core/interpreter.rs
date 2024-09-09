@@ -157,6 +157,25 @@ impl Interpreter {
     }
 
   }
+  fn evaluatable(&mut self, node: AST::Node, env: &mut Environment) -> bool {
+    let mut childs_evaluated = true;
+    match node.kind {
+      AST::NodeKind::Identifier{ref childs, ..} => {
+        for i in childs {
+          match i.kind {
+            AST::NodeKind::Identifier{..} => {
+              childs_evaluated = childs_evaluated && self.evaluatable(*i.clone(), env);
+            }
+            _ => {},
+          }
+        }
+      }
+      _ => {}
+    }
+
+    childs_evaluated && env.exists(node)
+
+  }
   fn evaluate_function(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
       AST::NodeKind::TypeDeclaration{identifier, ftype} => {
@@ -174,10 +193,13 @@ impl Interpreter {
         };
 
         match (*statement).kind {
-          AST::NodeKind::Identifier{..} => {
-            if env.exists(*statement.clone()) {
+          AST::NodeKind::Identifier{ref childs, ..} => {
+
+
+            if self.evaluatable(*statement.clone(), env) {
               let eval = self.evaluate(*statement, env);
               env.declare(*identifier, eval);
+
             } else {
               env.declare(*identifier, AST::Proventus{value: AST::Fructa::Moenus(unboxed_args, *statement),id:-1});
             }
@@ -741,7 +763,7 @@ impl Interpreter {
             fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
           }
           expected = 2;
-        } else if f == builtins::to_int {
+        } else if f == builtins::to_int || f == builtins::to_string {
           if args_vec.len()>=1 {
             fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
           }

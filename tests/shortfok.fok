@@ -22,22 +22,22 @@ repeat chr 0 = "";
 repeat chr n = chr:(repeat chr (n-1));
 
 
-injectUser template = "":replace "{username}" (globals.user.username)
+injectUser template = replace "{username}" (globals.user.username)
                         $ replace "{blank-username}" (repeat ' ' (length (globals.user.username)))
                         $ replace "{hostname}" (globals.user.hostname)
                         $ replace "{blank-hostname}" (repeat ' ' (length (globals.user.hostname))) template;
 
 
-injectOS template = "":replace "{os}" (globals.os.prettyname)
+injectOS template = replace "{os}" (globals.os.prettyname)
                       $ replace "{kernel}" (globals.os.kernel)
-                      $ replace "{uptime}" (globals.os.uptime) template;
+                      $ replace "{uptime}" (toString (toInt (head (split "." (globals.os.uptime)))) / 60):" mins" template;
 
 
-injectHardware template = "":replace "{cpu}" (globals.hardware.cpu) template;
+injectHardware template = replace "{cpu}" (globals.hardware.cpu) template;
 
 
 
-injectAll template = "":injectUser $ injectHardware $ injectOS template;
+injectAll template = injectUser $ injectHardware $ injectOS template;
 
 if (fokfetch.enable) {
 
