@@ -9,6 +9,7 @@ pub enum Operator {
   Multiplication,       // *    ->  x * 2
   Division,             // /    ->  e / 2
   Exponentiation,       // ^    ->  e ^ x
+  DivideRest,           // %    -> a % b
   Equal,                // =    ->  x = 4
   
   RightArrow,           // ->   ->  x -> idk
@@ -67,7 +68,7 @@ pub struct Token {
   pub tokentype: TokenType,
   pub tokenvalue: TokenValue,
 }
-#[derive(Clone,Copy)]
+#[derive(Debug,Clone,Copy)]
 pub struct Tokenizer {}
 
 
@@ -161,6 +162,9 @@ impl Tokenizer {
         },
         '/' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Division)});
+        },
+        '%' => {
+          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DivideRest)});
         },
         '^' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Exponentiation)});  

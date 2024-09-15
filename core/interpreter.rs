@@ -3,11 +3,11 @@ use core::error_handler::ErrorHandler;
 use core::tokenizer::{Operator};
 use std::{convert::TryInto};
 use core::env::Environment;
-use core::builtins;
+use core::{tokenizer, parser, builtins};
 
 
 #[derive(Debug,Clone)]
-pub struct Interpreter {pub error_handler:ErrorHandler}
+pub struct Interpreter {pub error_handler:ErrorHandler, pub parser: parser::Parser, pub tokenizer: tokenizer::Tokenizer}
 
 impl Interpreter {
   fn evaluate_program(&mut self, program: AST::Node, env: &mut Environment) -> AST::Proventus {
@@ -279,6 +279,20 @@ impl Interpreter {
                     panic!("Division by zero") 
                   }
                   AST::Proventus{value: AST::Fructa::Numerum(i/i2), id: -1}
+                }
+                _ => panic!("Division cyka blyat")
+              }
+            },
+            _ => panic!("Division of l and r not implemented")
+          },
+          Operator::DivideRest => match self.evaluate(*node_left, env).value {
+            AST::Fructa::Numerum(i) => {
+              match self.evaluate(*node_right, env).value {
+                AST::Fructa::Numerum(i2) => {
+                  if i2==0 {//error handle it i beg
+                    panic!("Division by zero") 
+                  }
+                  AST::Proventus{value: AST::Fructa::Numerum(i % i2), id: -1}
                 }
                 _ => panic!("Division cyka blyat")
               }
@@ -768,6 +782,19 @@ impl Interpreter {
             fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env));
           }
           expected = 1;
+        } else if f == builtins::globals {
+          fargs = builtins::FunctionArgs::zerum();
+          expected = 0;
+        } else if f == builtins::read_file {
+          if args_vec.len()>=1 {
+            fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env))
+          }
+          expected = 1
+        } else if f == builtins::load_file {
+          if args_vec.len()>=1 {
+            fargs = builtins::FunctionArgs::load_file(self.evaluate(args_vec[0].clone(), env), env.clone(), self.clone());
+          }
+          expected = 1;
         };
 
        if got>=expected {
@@ -833,3 +860,5 @@ impl Interpreter {
     }
   }
 }
+
+

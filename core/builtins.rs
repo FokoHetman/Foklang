@@ -307,6 +307,30 @@ pub fn to_string(arguments: Arguments) -> Proventus {
   }
 }
 
+pub fn load_file(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::load_file(s, mut env, mut interpreter) => {
+      let file = fs::read_to_string(combine_list_to_string(s)).unwrap();
+      let parsed = interpreter.parser.parse(interpreter.tokenizer.tokenize(file));
+      interpreter.evaluate(parsed, &mut env)
+    }
+    _ => panic!("?")
+  }
+}
+pub fn read_file(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::single(s) => {
+      let file = fs::read_to_string(combine_list_to_string(s)).unwrap();
+      let mut result: Vec<Proventus> = vec![];
+      for c in file.chars() {
+        result.push(Proventus{value: Fructa::Ustulo(c), id: -1});
+      }
+      Proventus{value: Fructa::Inventarii(result), id: -1}
+    }
+    _ => panic!("?")
+  }
+}
+
 
 
 
@@ -346,23 +370,7 @@ fn parseCPUInfo(conf: String) -> HashMap<String, String> {
   return result;
 }
 
-
-
-pub fn declare_builtins(env: &mut Environment) {
-  let functions = vec![
-    (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
-    (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
-    (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
-    (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
-    (String::from("toString"), to_string),
-  ];
-  for i in functions {
-    declare_fn(i.0, i.1, env);
-    }
-  
-
-
-
+pub fn globals(_arguments: Arguments) -> Proventus {
   let mut s_kernel_version = fs::read_to_string("/proc/version").unwrap().split(" ").collect::<Vec<&str>>()[2].to_string();
 
   let mut cpuinfo = parseCPUInfo(fs::read_to_string("/proc/cpuinfo").unwrap().split("\n\n").collect::<Vec<&str>>()[0].to_string());
@@ -379,6 +387,8 @@ pub fn declare_builtins(env: &mut Environment) {
   //println!("{:#?}", cpuinfo);
   let s_cpumodel = cpuinfo.get("model name").unwrap();
 
+
+  let mut s_id = os_release.get("ID").unwrap().replace("\n","");
 
   let mut s_pretty_name = os_release.get("PRETTY_NAME").unwrap().replace("\n","");
 
@@ -406,6 +416,10 @@ pub fn declare_builtins(env: &mut Environment) {
   for i in s_pretty_name.chars() {
     pretty_name.push(Proventus{value: Fructa::Ustulo(i), id:-5});
   }
+  let mut id: Vec<Proventus> = vec![];
+  for i in s_id.chars() {
+    id.push(Proventus{value: Fructa::Ustulo(i), id:-5});
+  }
 
   let mut kernel_version: Vec<Proventus> = vec![];
   for i in s_kernel_version.chars() {
@@ -424,10 +438,7 @@ pub fn declare_builtins(env: &mut Environment) {
     uptime.push(Proventus{value: Fructa::Ustulo(i), id:-5});
   }
 
-
-
-  env.declare(Node{kind: NodeKind::Identifier{symbol: String::from("globals"), childs: vec![]}},
-      Proventus{value: Fructa::Causor(
+  Proventus{value: Fructa::Causor(
         vec![
           (Node{kind: NodeKind::Identifier{symbol: String::from("user"), childs: vec![]}}, Proventus{value: Fructa::Causor(
             vec![
@@ -438,6 +449,7 @@ pub fn declare_builtins(env: &mut Environment) {
           (Node{kind: NodeKind::Identifier{symbol: String::from("os"), childs: vec![]}}, Proventus{value: Fructa::Causor(
             vec![
               (Node{kind: NodeKind::Identifier{symbol: String::from("prettyname"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(pretty_name), id:-5}),
+              (Node{kind: NodeKind::Identifier{symbol: String::from("id"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(id), id:-5}),
               (Node{kind: NodeKind::Identifier{symbol: String::from("kernel"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(kernel_version), id:-5}),
               (Node{kind: NodeKind::Identifier{symbol: String::from("uptime"), childs: vec![]}}, Proventus{value: Fructa::Inventarii(uptime), id:-5}),
             ]
@@ -449,7 +461,22 @@ pub fn declare_builtins(env: &mut Environment) {
           ), id: -5}),
 
         ]
-      ), id:-5});
+      ), id:-5}
+}
+
+
+
+pub fn declare_builtins(env: &mut Environment) {
+  let functions = vec![
+    (String::from("get"), get as fn(Arguments) -> Proventus), (String::from("print"), print), (String::from("println"), println),
+    (String::from("fmap"), fmap), (String::from("join"), join), (String::from("return"), returnfn), (String::from("data"), data),
+    (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
+    (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
+    (String::from("toString"), to_string), (String::from("globals"), globals), (String::from("read_file"), read_file), (String::from("load_file"), load_file),
+  ];
+  for i in functions {
+    declare_fn(i.0, i.1, env);
+  }
 }
 
 
@@ -486,4 +513,5 @@ pub enum FunctionArgs {
   triple(Proventus, Proventus, Proventus),
   many(Vec<Proventus>),
   fmap(Proventus, Proventus, Environment, Interpreter),
+  load_file(Proventus, Environment, Interpreter),
 }

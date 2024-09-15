@@ -15,7 +15,7 @@ fn main() {
   let mut env = core::env::Environment{ error_handler, ..Default::default() };
 
   core::builtins::declare_builtins(&mut env);
-  let mut interpreter = core::interpreter::Interpreter {error_handler};
+  let mut interpreter = core::interpreter::Interpreter {error_handler, tokenizer, parser};
 
 
   if env::args().len() > 1 {

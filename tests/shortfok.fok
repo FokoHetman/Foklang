@@ -21,6 +21,7 @@ cursorToData = "\x1b[5C";
 repeat chr 0 = "";
 repeat chr n = chr:(repeat chr (n-1));
 
+formatUptime x = (toString (x / 60)):"h, ":(toString (x % 60)):"m";
 
 injectUser template = replace "{username}" (globals.user.username)
                         $ replace "{blank-username}" (repeat ' ' (length (globals.user.username)))
@@ -30,7 +31,7 @@ injectUser template = replace "{username}" (globals.user.username)
 
 injectOS template = replace "{os}" (globals.os.prettyname)
                       $ replace "{kernel}" (globals.os.kernel)
-                      $ replace "{uptime}" (toString (toInt (head (split "." (globals.os.uptime)))) / 60):" mins" template;
+                      $ replace "{uptime}" (formatUptime (toInt (head (split "." (globals.os.uptime)))) / 60) template;
 
 
 injectHardware template = replace "{cpu}" (globals.hardware.cpu) template;
