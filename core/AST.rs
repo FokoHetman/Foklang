@@ -15,7 +15,7 @@ pub enum NodeKind {
   List{body: Vec<Box<Node>>},
   ListConcat{item: Box<Node>, list: Box<Node>},
   Bool{value: NodeValue},
-  Config{arguments: Vec<(Box<Node>, Box<Node>)>},
+  Config{arguments: Vec<(Box<Node>, Box<Node>)>, flags: Vec<ConfigFlag>},
   Access{parent: Box<Node>, value: Box<Node>},
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
   TypeDeclaration{identifier: Box<Node>, ftype: Box<Node>},
@@ -28,6 +28,10 @@ pub enum NodeValue {
   Char(char),
   Bool(bool),
   Nullus,
+}
+#[derive(Debug,Clone,PartialEq)]
+pub enum ConfigFlag {
+  CodeBlock,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -203,7 +207,7 @@ impl NodeKind {
       NodeKind::Bool{..} => {
         String::from("bool")
       },
-      NodeKind::Config{arguments} => {
+      NodeKind::Config{arguments, flags} => {
         let mut result = String::from("{");
         for i in arguments {
           result += &format!("{}: {};", i.0.kind.display(), i.1.kind.evaluate_type());

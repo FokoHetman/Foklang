@@ -41,7 +41,7 @@ impl Interpreter {
       AST::NodeKind::Identifier{symbol:_, ..} => self.evaluate_identifier(node, env),
       AST::NodeKind::List{..} => self.evaluate_list(node, env),
       AST::NodeKind::ListConcat{..} => self.evaluate_list(node, env),
-      AST::NodeKind::Config{arguments:_} => self.evaluate_object(node, env),
+      AST::NodeKind::Config{..} => self.evaluate_object(node, env),
       AST::NodeKind::Access{..} => self.evaluate_object(node, env),
       AST::NodeKind::FunctionDeclaration{identifier: _, statement: _} => self.evaluate_function(node, env),
       AST::NodeKind::TypeDeclaration{identifier: _, ftype: _} => self.evaluate_function(node, env),
@@ -490,14 +490,14 @@ impl Interpreter {
         //body = &mut new_body;
         
       },
-      AST::NodeKind::Config{ref arguments} => {
+      AST::NodeKind::Config{ref arguments, flags} => {
         let mut new_arguments: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
         for i in arguments {
           new_arguments.push(( i.0.clone(), Box::new(self.soft_evaluate(*i.1.clone(), id.clone(), env)) ) );
         }
         
         //arguments = &mut new_arguments;
-        AST::Node{kind: AST::NodeKind::Config{arguments: new_arguments}}
+        AST::Node{kind: AST::NodeKind::Config{arguments: new_arguments, flags}}
         
       },
       AST::NodeKind::ListConcat{item, list} => {
@@ -847,14 +847,31 @@ impl Interpreter {
           _ => panic!("not an identifier")
         }
       },
-      AST::NodeKind::Config{arguments} => {
+      AST::NodeKind::Config{arguments, flags} => {
         let mut args: Vec<(AST::Node, AST::Proventus)> = vec![];
-        for i in arguments {
+        if flags.contains(&AST::ConfigFlag::CodeBlock) {
+          let mut t_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+          let mut latest = AST::Proventus{value: AST::Fructa::Nullus, id: -1};
+          for i in arguments {
+            match i.0.clone().kind {
+              AST::NodeKind::Identifier{symbol,..} => {
+                if symbol == String::from("FOKO_EVALUATE_NODE_I_WILL_KRILL") {
+                  latest = self.evaluate(*i.1.clone(), &mut t_env);
+                } else {
+                  latest = self.evaluate(AST::Node{kind: AST::NodeKind::FunctionDeclaration{identifier: Box::new(*i.0.clone()), statement: Box::new(*i.1.clone())}}, &mut t_env);
+                }
+              }
+              _ => {}
+            }
+          }
+          latest
+        } else {
+          for i in arguments {
           
-          args.push((*i.0.clone(), self.evaluate(*i.1.clone(), env)));
+            args.push((*i.0.clone(), self.evaluate(*i.1.clone(), env)));
+          }
+          AST::Proventus{value: AST::Fructa::Causor(args), id: -1}
         }
-        AST::Proventus{value: AST::Fructa::Causor(args), id: -1}
-
       }
       _ => panic!("evaluation non-object as object damn")
     }

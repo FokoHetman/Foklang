@@ -261,6 +261,7 @@ impl Parser {
       TokenType::OpenCParen => {
         //make it own type tbh
         let mut args: Vec<(Box<AST::Node>, Box<AST::Node>)> = vec![];
+        let mut flags: Vec<AST::ConfigFlag> = vec![];
         //let is_config = true;
         while self.at(tokens).tokentype!=TokenType::CloseCParen {
           let eval =  self.parse_stmt(tokens);
@@ -273,6 +274,9 @@ impl Parser {
             //AST::NodeKind::NullLiteral{..} => {},
             //_ => panic!("Passed a rather weird value to a config: {:#?}", left)//AST::Node{kind: AST::NodeKind::NullLiteral{value:AST::NodeValue::Nullus}}
             _ => {
+              if !flags.contains(&AST::ConfigFlag::CodeBlock) {
+                flags.push(AST::ConfigFlag::CodeBlock);
+              }
               let left = AST::Node{kind: AST::NodeKind::Identifier{symbol: String::from("FOKO_EVALUATE_NODE_I_WILL_KRILL"), childs: vec![]}};
               let right = eval;
               args.push((Box::new(left), Box::new(right) ));
@@ -280,7 +284,7 @@ impl Parser {
           };
         }
         self.eatExpect(TokenType::CloseCParen, "Invalid token".to_string(), tokens);
-        AST::Node{kind: AST::NodeKind::Config {arguments: args}}
+        AST::Node{kind: AST::NodeKind::Config {arguments: args, flags}}
       },
       TokenType::Char => {
           match eat.tokenvalue {
