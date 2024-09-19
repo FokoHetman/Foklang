@@ -1,7 +1,7 @@
 fokfetch = load_file "config.fok";
 
 
-art = replace "$4" (fokfetch.colors.C4) $ replace "$3" (fokfetch.colors.C3) $ replace "$2" (fokfetch.colors.C2) $ replace "$1" (fokfetch.colors.C1) (read_file (replace "{distro}" (globals.os.id) "ascii/{distro}.txt"));
+art = replace "$4" fokfetch.colors.C4 $ replace "$3" fokfetch.colors.C3 $ replace "$2" fokfetch.colors.C2 $ replace "$1" fokfetch.colors.C1 $ read_file $ replace "{distro}" globals.os.id "ascii/{distro}.txt";
 
 
 parsedisplay [] = " ";
@@ -12,34 +12,34 @@ constant_move = 12;
 
 cursorToFirstLine = replace "{len}" (toString( (length (split "\n" art))-1)) "\x1b[{len}A";
 cursorToData = replace "{len}" (toString( (length( head( split "\n" art)))+constant_move)) "\x1b[{len}C";
-cursorToEnd = (replace "{len}" (toString( (length (split "\n" art)) - length (fokfetch.display))) "\x1b[{len}B"):(replace "{len}" (toString((length( head( split "\n" art)))+constant_move)) "\x1b[{len}D");
+cursorToEnd = (replace "{len}" (toString( (length (split "\n" art)) - length fokfetch.display)) "\x1b[{len}B"):(replace "{len}" (toString((length( head( split "\n" art)))+constant_move)) "\x1b[{len}D");
 
 repeat chr 0 = "";
 repeat chr n = chr:(repeat chr (n-1));
 
 formatUptime x = (toString (x / 60)):"h, ":(toString (x % 60)):"m";
 
-injectUser template = replace "{username}" (globals.user.username)
-                        $ replace "{blank-username}" (repeat ' ' (length (globals.user.username)))
-                        $ replace "{hostname}" (globals.user.hostname)
-                        $ replace "{blank-hostname}" (repeat ' ' (length (globals.user.hostname))) template;
+injectUser template = replace "{username}" globals.user.username
+                        $ replace "{blank-username}" (repeat ' ' (length globals.user.username))
+                        $ replace "{hostname}" globals.user.hostname
+                        $ replace "{blank-hostname}" (repeat ' ' (length globals.user.hostname)) template;
 
 
-injectOS template = replace "{os}" (globals.os.prettyname)
-                      $ replace "{kernel}" (globals.os.kernel)
-                      $ replace "{uptime}" (formatUptime (toInt (head (split "." (globals.os.uptime)))) / 60) template;
+injectOS template = replace "{os}" globals.os.prettyname
+                      $ replace "{kernel}" globals.os.kernel
+                      $ replace "{uptime}" (formatUptime (toInt (head (split "." globals.os.uptime))) / 60) template;
 
 
-injectHardware template = replace "{cpu}" (globals.hardware.cpu) template;
+injectHardware template = replace "{cpu}" globals.hardware.cpu template;
 
-injectColors template = replace "$4" (fokfetch.colors.C4) $ replace "$3" (fokfetch.colors.C3) $ replace "$2" (fokfetch.colors.C2) $ replace "$1" (fokfetch.colors.C1) template;
+injectColors template = replace "$4" fokfetch.colors.C4 $ replace "$3" fokfetch.colors.C3 $ replace "$2" fokfetch.colors.C2 $ replace "$1" fokfetch.colors.C1 template;
 
 injectAll template = injectColors $ injectUser $ injectHardware $ injectOS template;
 
-if (fokfetch.enable) {
+if fokfetch.enable {
   print art;
-  print (cursorToData:cursorToFirstLine);
+  print cursorToData:cursorToFirstLine;
   print "\x1b[0m";
-  println $ injectAll $ parsedisplay (fokfetch.display);
+  println $ injectAll $ parsedisplay fokfetch.display;
   print cursorToEnd;
 };
