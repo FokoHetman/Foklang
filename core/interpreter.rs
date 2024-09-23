@@ -48,7 +48,31 @@ impl Interpreter {
       AST::NodeKind::IfStatement{..} => self.evaluate_if(node,env),
       AST::NodeKind::Char{..} => self.evaluate_char(node, env),
       AST::NodeKind::Bool{..} => self.evaluate_bool(node, env),
+      AST::NodeKind::Case{..} => self.evaluate_matchcase(node, env),
+      AST::NodeKind::Match{..} => self.evaluate_matchcase(node, env),
       _ => panic!("{} {:#?}", self.error_handler.interpreter("unknown_node").error_msg, node)
+    }
+  }
+  fn evaluate_matchcase(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
+    match node.kind {
+      AST::NodeKind::Case{value} => {
+        self.evaluate(*value, env)
+      }
+      AST::NodeKind::Match{left, values} => {
+        let mut t_env = Environment {parent: Some(Box::new(env.clone())), ..Default::default()};
+        //println!("{:#?}", env);
+        t_env.declare(AST::Node{kind: AST::NodeKind::Identifier{symbol: String::from("x"), childs: vec![]}}, self.evaluate(*left, env));
+        
+        let mut result = AST::Proventus{value: AST::Fructa::Nullus, id: -1};
+        for i in values {
+          let eval = self.evaluate(*i, &mut t_env);
+          if eval.value != AST::Fructa::Nullus {
+            result = eval
+          }
+        }
+        result
+      }
+      _ => panic!("h")
     }
   }
   fn evaluate_if(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
@@ -418,7 +442,18 @@ impl Interpreter {
             }
             _ => panic!("ranges not implemented for non-Numerum values")
           },
-
+          Operator::RightFatArrow => {
+            let evaluated = self.evaluate(*node_left, env);
+            if match evaluated.value {
+              AST::Fructa::Condicio(b) => b==true,
+              AST::Fructa::Nullus => false,
+              _ => env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: String::from("x"), childs: vec![]}})[0] == evaluated,
+            } {
+              self.evaluate(*node_right, env)
+            } else {
+              AST::Proventus{value: AST::Fructa::Nullus, id:-1}
+            }
+          },
           _ => panic!("[Interpreter Error] Unknown Operator: {:#?}", node_operator)
         }
 
@@ -506,6 +541,18 @@ impl Interpreter {
         AST::Node{kind: AST::NodeKind::ListConcat{item: new_item, list: new_list}}
 
       },
+      AST::NodeKind::Case{value} => {
+        let value = self.soft_evaluate(*value.clone(), id.clone(), env);
+        AST::Node{kind: AST::NodeKind::Case{value: Box::new(value)}}
+      }
+      AST::NodeKind::Match{left, values} => {
+        let left = self.soft_evaluate(*left.clone(), id.clone(), env);
+        let mut nvals: Vec<Box<AST::Node>> = vec![];
+        for i in values {
+          nvals.push(Box::new(self.soft_evaluate(*i.clone(), id.clone(), env)));
+        }
+        AST::Node{kind: AST::NodeKind::Match{left: Box::new(left), values: nvals}}
+      }
       _ => new_value,
     }
     //println!("end");
@@ -591,6 +638,7 @@ impl Interpreter {
 
               //println!("{:#?}", final_function.clone());
               for i in 0..childs.clone().len() {
+                //println!("{:#?}", args[i].clone().kind);
 
                 let mut one_arg_env = Environment{parent: Some(Box::new(env.clone())), error_handler: self.error_handler, ..Default::default()};
                 
@@ -606,6 +654,7 @@ impl Interpreter {
                   },
                   _ => {}
                 };
+                //println!("oae: {:#?}", one_arg_env);
 
 
                 //println!("{:#?}", self.soft_evaluate(match final_function.value {AST::Fructa::Moenus(ref args, ref statement) => statement.clone(), _ => panic!("huh")}, args[i].clone(), &mut one_arg_env));

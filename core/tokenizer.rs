@@ -14,6 +14,8 @@ pub enum Operator {
   
   RightArrow,           // ->   ->  x -> idk
   LeftArrow,            // <-   ->  x <- [1..10]
+  
+  RightFatArrow,        // =>
 
   Comparision,          // ==   ->  2+2==4
 
@@ -26,7 +28,8 @@ pub enum Operator {
   SingleDot,            // .    -> help.me  (get help me)
 
   ListSplitter,         // :    ->  (x:xs)
-  DoubleColon            // ::   -> function :: Type -> Type...
+  DoubleColon,          // ::   -> function :: Type -> Type...
+
 }
 #[derive(Debug,Clone,PartialEq)]
 pub enum TokenValue {
@@ -57,8 +60,8 @@ pub enum TokenType {
 
 
   ArgumentDivisor,      // $    ->  f x $ g y  -> f(x, (g(y)))
-  
-
+  Case,                 // |    -> f x = match | x==2 => 2 | x==3 => 3
+  Match,                // match
   Char,
   String,
   If,
@@ -100,7 +103,7 @@ impl Tokenizer {
     let mut list_input: Vec<char> = input.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "\'").replace("\\x1b", "\x1b").chars().collect();
     let mut tokens: Vec<Token> = [].to_vec();
     let mut pass;
-    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false))), (String::from("if"), (TokenType::If, TokenValue::Nullus))]);
+    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false))), (String::from("if"), (TokenType::If, TokenValue::Nullus)), (String::from("match"), (TokenType::Match, TokenValue::Nullus))]);
     while list_input.len()>0 {
       pass = false;
       let current_char = list_input[0];
@@ -137,6 +140,10 @@ impl Tokenizer {
             '=' => {
               list_input.remove(0);
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Comparision)});
+            },
+            '>' => {
+              list_input.remove(0);
+              tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::RightFatArrow)});
             },
             _ => {
               tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Equal)});
@@ -231,6 +238,9 @@ impl Tokenizer {
         },
         '$' => {
           tokens.push(Token{tokentype: TokenType::ArgumentDivisor, tokenvalue: TokenValue::Nullus});
+        },
+        '|' => {
+          tokens.push(Token{tokentype: TokenType::Case, tokenvalue: TokenValue::Nullus});
         },
         ':' => {
           match list_input[1] {

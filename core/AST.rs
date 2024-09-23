@@ -20,6 +20,9 @@ pub enum NodeKind {
   FunctionDeclaration{identifier: Box<Node>,/* arguments: Vec<Box<Node>>,*/ statement: Box<Node>},
   TypeDeclaration{identifier: Box<Node>, ftype: Box<Node>},
   IfStatement{condition: Box<Node>, body: Box<Node> /*specific Config*/},
+
+  Case{value: Box<Node>},
+  Match{left: Box<Node>, values: Vec<Box<Node>>},
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum NodeValue {

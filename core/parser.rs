@@ -84,25 +84,40 @@ impl Parser {
   }
   pub fn parse_statements(&mut self, tokens: &mut Vec<Token>, depth: i32) -> AST::Node {
     let mut left = self.parse_expr(tokens, depth);
-    while self.at(tokens).tokentype == TokenType::If {
-      self.eat(tokens);
-      left = AST::Node{kind: AST::NodeKind::IfStatement {
-        condition: Box::new(self.parse_expr(tokens, depth)),
-        body: Box::new(self.parse_expr(tokens, depth)),
-      }};
+    while self.at(tokens).tokentype == TokenType::If || self.at(tokens).tokentype == TokenType::Match {
+
+      left = match self.at(tokens).tokentype {
+        TokenType::If => {
+          self.eat(tokens);
+          AST::Node{kind: AST::NodeKind::IfStatement {
+            condition: Box::new(self.parse_expr(tokens, depth)),
+            body: Box::new(self.parse_expr(tokens, depth)),
+          }}
+        },
+        TokenType::Match => {
+          self.eat(tokens);
+          let mut impls: Vec<Box<AST::Node>> = vec![];
+          while self.at(tokens).tokentype == TokenType::Case {
+            impls.push(Box::new(self.parse_stmt(tokens, depth)));
+          }
+          AST::Node{kind: AST::NodeKind::Match{left: Box::new(left), values: impls}}
+        },
+        _ => panic!("impossible")
+      };
     }
     return left
   }
   pub fn parse_expr(&mut self, tokens: &mut Vec<Token>, depth: i32) -> AST::Node {
     let mut left = self.parse_additive_expr(tokens, depth);
 
-    while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Comparision)  ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Greater)      || 
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower)        ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::GreaterEqual) ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual)   ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::DoubleDot)    ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::RightArrow) {
+    while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Comparision)   ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Greater)       || 
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Lower)         ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::GreaterEqual)  ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::LowerEqual)    ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::DoubleDot)     ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::RightArrow)    ||
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::RightFatArrow) {
       left = AST::Node{kind: AST::NodeKind::BinaryExpression{
         left: Box::new(left),
         operator: match self.eat(tokens).tokenvalue {
@@ -309,7 +324,19 @@ impl Parser {
 
         return AST::Node{kind: AST::NodeKind::List {body: cvec}}
       },
-      
+      TokenType::Case => {
+          let implication = self.parse_stmt(tokens, depth);
+          AST::Node{kind: AST::NodeKind::Case{value: Box::new(implication)}}
+      },
+      TokenType::Match => {
+        
+        let left = AST::Node{kind: AST::NodeKind::NullLiteral{value: AST::NodeValue::Nullus}};
+        let mut impls: Vec<Box<AST::Node>> = vec![];
+        while self.at(tokens).tokentype == TokenType::Case {
+          impls.push(Box::new(self.parse_stmt(tokens, depth)));
+        }
+        AST::Node{kind: AST::NodeKind::Match{left: Box::new(left), values: impls}}
+      },
       TokenType::SemiColon => {
         //self.parse_stmt(tokens)
         AST::Node{kind: AST::NodeKind::NullLiteral {value: AST::NodeValue::Nullus}}
