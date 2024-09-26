@@ -23,6 +23,7 @@ pub enum NodeKind {
 
   Case{value: Box<Node>},
   Match{left: Box<Node>, values: Vec<Box<Node>>},
+  AdvancedDeclaration{body: Box<Node>, declarations: Vec<Box<Node>>},
 }
 #[derive(Debug, Clone, PartialEq)]
 pub enum NodeValue {

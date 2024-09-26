@@ -39,6 +39,7 @@ impl Interpreter {
       AST::NodeKind::NumericLiteral{value:i} => AST::Proventus{value: AST::Fructa::Numerum(match i {AST::NodeValue::Integer(i) => i, _ => 0}), id: -1},
       AST::NodeKind::BinaryExpression{left:_,right:_,operator:_} => self.evaluate_binary_expression(node, env),
       AST::NodeKind::Identifier{symbol:_, ..} => self.evaluate_identifier(node, env),
+      AST::NodeKind::AdvancedDeclaration{..} => self.evaluate_list(node, nev),
       AST::NodeKind::List{..} => self.evaluate_list(node, env),
       AST::NodeKind::ListConcat{..} => self.evaluate_list(node, env),
       AST::NodeKind::Config{..} => self.evaluate_object(node, env),
@@ -112,6 +113,18 @@ impl Interpreter {
   }
   fn evaluate_list(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
+      AST::NodeKind::AdvancedDeclaration{body, assumptions} => {
+        let mut t_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+        for i in assumptions {
+          match i.kind {
+            AST::NodeKind::FunctionDeclaration{identifier, statement} => {
+              t_env.declare(identifier, statement);
+            }
+            _ => panic!("not supported assumption")
+          }
+        }
+
+      }
       AST::NodeKind::ListConcat{item, list} => {
         let evaluated = self.evaluate(*list.clone(), env);
         let evaluated_item = self.evaluate(*item.clone(), env);

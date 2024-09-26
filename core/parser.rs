@@ -84,7 +84,7 @@ impl Parser {
   }
   pub fn parse_statements(&mut self, tokens: &mut Vec<Token>, depth: i32) -> AST::Node {
     let mut left = self.parse_expr(tokens, depth);
-    while self.at(tokens).tokentype == TokenType::If || self.at(tokens).tokentype == TokenType::Match {
+    while self.at(tokens).tokentype == TokenType::If || self.at(tokens).tokentype == TokenType::Match || self.at(tokens).tokentype == TokenType::Case {
 
       left = match self.at(tokens).tokentype {
         TokenType::If => {
@@ -102,6 +102,14 @@ impl Parser {
           }
           AST::Node{kind: AST::NodeKind::Match{left: Box::new(left), values: impls}}
         },
+        TokenType::Case => {
+          self.eat(tokens);
+          let mut declarations: Vec<Box<AST::Node>> = vec![Box::new(self.parse_stmt(tokens, depth))];
+          while self.at(tokens).tokentype == TokenType::SemiColon {
+            declarations.push(Box::new(self.parse_stmt(tokens, depth)));
+          }
+          AST::Node{kind: AST::NodeKind::AdvancedDeclaration{body: Box::new(left), declarations}}
+        }
         _ => panic!("impossible")
       };
     }
