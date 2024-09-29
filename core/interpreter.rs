@@ -39,7 +39,7 @@ impl Interpreter {
       AST::NodeKind::NumericLiteral{value:i} => AST::Proventus{value: AST::Fructa::Numerum(match i {AST::NodeValue::Integer(i) => i, _ => 0}), id: -1},
       AST::NodeKind::BinaryExpression{left:_,right:_,operator:_} => self.evaluate_binary_expression(node, env),
       AST::NodeKind::Identifier{symbol:_, ..} => self.evaluate_identifier(node, env),
-      AST::NodeKind::AdvancedDeclaration{..} => self.evaluate_list(node, nev),
+      AST::NodeKind::AdvancedDeclaration{..} => self.evaluate_list(node, env),
       AST::NodeKind::List{..} => self.evaluate_list(node, env),
       AST::NodeKind::ListConcat{..} => self.evaluate_list(node, env),
       AST::NodeKind::Config{..} => self.evaluate_object(node, env),
@@ -115,14 +115,117 @@ impl Interpreter {
     match node.kind {
       AST::NodeKind::AdvancedDeclaration{body, assumptions} => {
         let mut t_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+        let mut bounds: Vec<AST::Node> = vec![];
+        let mut checks: Vec<AST::Node> = vec![];
         for i in assumptions {
           match i.kind {
             AST::NodeKind::FunctionDeclaration{identifier, statement} => {
-              t_env.declare(identifier, statement);
+              t_env.declare(*identifier.clone(), self.evaluate(*statement.clone(), env));
+            },
+            /*AST::NodeKind::DefineBounds{..} => {
+              bounds.push(*i.clone());
+            },*/
+            AST::NodeKind::Identifier{..} => {
+              checks.push(*i.clone());
+            },
+            AST::NodeKind::BinaryExpression{ref operator, ..} => {
+              match operator.clone() {
+                Operator::LeftArrow => {
+                  bounds.push(*i.clone());
+                },
+                _ => {
+                  checks.push(*i.clone());
+                }
+              }
             }
-            _ => panic!("not supported assumption")
+            _ => panic!("not supported assumption: {:#?}", i.clone())
           }
         }
+        //println!("bound: {:#?}; checks: {:#?}", bounds, checks);
+
+        let mut identifierBounds: Vec<(AST::Node, Vec<AST::Proventus>)> = vec![];
+        for i in bounds.clone() {
+          match i.kind.clone() {
+            AST::NodeKind::BinaryExpression{left, right, ..} => {
+                let mut already_parsed = false;
+                for x in identifierBounds.clone() {
+                  already_parsed = already_parsed || x.0 == *left.clone();
+                }
+                if !already_parsed {
+                  let mut ibounds: Vec<AST::Proventus> = vec![];
+                  for y in bounds.clone() {
+                    match y.kind {
+                      AST::NodeKind::BinaryExpression{left: identifier2, right: bound, ..} => {
+                        if *identifier2.clone() == *left.clone() {
+                          ibounds.push(self.evaluate(*bound.clone(), env));
+                        }
+                    .clone() }
+                      _ => panic!("23454")
+                    }
+                  }
+                  identifierBounds.push((*left.clone(), ibounds));
+              }
+            }
+            _ => panic!("23454")
+          }
+        }
+        let mut final_bounds: Vec<(AST::Node, Vec<AST::Proventus>)> = vec![];
+
+        for id in identifierBounds {
+          let mut definitive = id.1[0].clone();
+          match definitive.value { //make repeat here because you were lazy previously (lazy bitch)
+            AST::Fructa::Inventarii(list) => {
+              let mut n_list: Vec<AST::Proventus> = vec![];
+              for i in list {
+                let mut t2_env = Environment{parent: Some(Box::new(t_env.clone())), ..Default::default()};
+                t2_env.declare(id.0.clone(), i.clone());
+                let mut checks_passed = true;
+
+                for x in &checks {
+                  //println!("{:#?}", x.clone());
+                  let eval = self.evaluate(x.clone(), &mut t2_env);
+                  checks_passed = checks_passed && match eval.value {
+                    AST::Fructa::Condicio(b) =>  b,
+                    _ => true
+                  };
+                }
+                if checks_passed {
+                  n_list.push(i.clone());
+                }
+              }
+              let mut list = n_list;
+
+              for boundi in 1..id.1.len()-1 {
+                match &id.1[boundi].value {
+                  AST::Fructa::Inventarii(list2)  => {
+                    let mut result: Vec<AST::Proventus> = vec![];
+                    for i in 0..list2.len()-1 {
+                      result.append(&mut list.clone());
+                    }
+
+                    list = result;
+                  }
+                  _ => panic!(">>?:")
+                };
+              }
+              final_bounds.push((id.0.clone(), list));
+            }
+            _ => panic!("osvgkf")
+          }
+        }
+        let mut finale: Vec<AST::Proventus> = vec![];
+
+        for i in final_bounds {
+          for x in i.1 {
+            let mut t2_env = Environment{parent: Some(Box::new(t_env.clone())), ..Default::default()};
+            t2_env.declare(i.0.clone(), x);
+            finale.push(self.evaluate(*body.clone(), &mut t2_env));
+          }
+        }
+
+        AST::Proventus{value: AST::Fructa::Inventarii(finale), id: 112}
+        //panic!("{:#?}", final_bounds)
+        
 
       }
       AST::NodeKind::ListConcat{item, list} => {
