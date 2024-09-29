@@ -980,6 +980,7 @@ impl Interpreter {
       AST::Fructa::Condicio(i) => { result = AST::Proventus {value: AST::Fructa::Condicio(i), id: -1}},
       AST::Fructa::Causor(i) => { result = AST::Proventus {value: AST::Fructa::Causor(i), id: -1}},
       AST::Fructa::Nullus => { result = AST::Proventus {value: AST::Fructa::Nullus, id: -2}},
+      AST::Fructa::Ustulo(c) => {result = AST::Proventus {value: AST::Fructa::Ustulo(c), id: -2}},
       _ => panic!("damn: {:#?}", variation)
       }
     }
