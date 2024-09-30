@@ -29,7 +29,7 @@
                 (builtins.placeholder "out")
               ];
             })
-            "${builtins.placeholder "out"}/bin/fokshell"
+            "${builtins.placeholder "out"}/bin/foklang"
           ];
         };
       });
