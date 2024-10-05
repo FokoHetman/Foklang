@@ -1,7 +1,7 @@
 use core::{AST, asm_env::Environment, tokenizer::Operator};
 
 #[derive(Debug,Clone)]
-enum ABuiltins {
+pub enum ABuiltins {
   returnfn
 }
 

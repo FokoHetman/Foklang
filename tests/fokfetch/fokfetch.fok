@@ -1,7 +1,7 @@
 fokfetch = load_file "config.fok";
 
 
-art = replace "$4" fokfetch.colors.C4 $ replace "$3" fokfetch.colors.C3 $ replace "$2" fokfetch.colors.C2 $ replace "$1" fokfetch.colors.C1 $ read_file $ replace "{distro}" globals.os.id "ascii/{distro}.txt";
+art = replace "$$" "$" $ replace "$4" fokfetch.colors.C4 $ replace "$3" fokfetch.colors.C3 $ replace "$2" fokfetch.colors.C2 $ replace "$1" fokfetch.colors.C1 $ read_file $ replace "{distro}" globals.os.id "ascii/{distro}.txt";
 
 
 parsedisplay [] = " ";
@@ -34,7 +34,7 @@ injectHardware template = replace "{cpu}" globals.hardware.cpu template;
 
 injectColors template = replace "$4" fokfetch.colors.C4 $ replace "$3" fokfetch.colors.C3 $ replace "$2" fokfetch.colors.C2 $ replace "$1" fokfetch.colors.C1 template;
 
-injectAll template = injectColors $ injectUser $ injectHardware $ injectOS template;
+injectAll template = injectColors $ injectUser $ injectHardware $ injectOS $ replace "$$" "$" template;
 
 if fokfetch.enable {
   print art;
