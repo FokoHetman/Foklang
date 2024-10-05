@@ -199,12 +199,15 @@ impl Interpreter {
                 let mut checks_passed = true;
 
                 for x in &checks {
-                  //println!("{:#?}", x.clone());
-                  let eval = self.evaluate(x.clone(), &mut t2_env);
-                  checks_passed = checks_passed && match eval.value {
-                    AST::Fructa::Condicio(b) =>  b,
-                    _ => true
-                  };
+                  //println!("{}", self.evaluatable(x.clone(), &mut t2_env));
+                  if self.evaluatable(x.clone(), &mut t2_env) {
+                    //println!("{:#?}", x.clone());
+                    let eval = self.evaluate(x.clone(), &mut t2_env);
+                    checks_passed = checks_passed && match eval.value {
+                      AST::Fructa::Condicio(b) =>  b,
+                      _ => true
+                    };
+                  }
                 }
                 if checks_passed {
                   n_list.push(i.clone());
@@ -317,7 +320,38 @@ impl Interpreter {
   }
   fn evaluatable(&mut self, node: AST::Node, env: &mut Environment) -> bool {
     let mut childs_evaluated = true;
-    match node.kind {
+    match node.clone().kind {
+      AST::NodeKind::BinaryExpression{left, right, ..} => {
+        childs_evaluated = childs_evaluated && self.evaluatable(*left.clone(), env) && self.evaluatable(*right.clone(), env);
+      },
+      AST::NodeKind::List{body} => {
+        for i in body {
+          childs_evaluated = childs_evaluated && self.evaluatable(*i.clone(), env);
+        }
+      },
+      AST::NodeKind::Config{ref arguments, flags} => {
+        for i in arguments {
+          childs_evaluated = childs_evaluated && self.evaluatable(*i.1.clone(), env);
+          //new_arguments.push(( i.0.clone(), Box::new(self.soft_evaluate(*i.1.clone(), id.clone(), env)) ) );
+        }
+        
+        //arguments = &mut new_arguments;
+      },
+      AST::NodeKind::ListConcat{item, list} => {
+        childs_evaluated = childs_evaluated && self.evaluatable(*item.clone(), env);
+        childs_evaluated = childs_evaluated && self.evaluatable(*list.clone(), env);
+        //AST::Node{kind: AST::NodeKind::ListConcat{item: new_item, list: new_list}}
+
+      },
+      AST::NodeKind::Case{value} => {
+        childs_evaluated = childs_evaluated && self.evaluatable(*value.clone(), env);
+      },
+      AST::NodeKind::Match{left, values} => {
+        childs_evaluated = childs_evaluated && self.evaluatable(*left.clone(), env);
+        for i in values {
+          childs_evaluated = childs_evaluated && self.evaluatable(*i.clone(), env);
+        }
+      },
       AST::NodeKind::Identifier{ref childs, ..} => {
         for i in childs {
           match i.kind {
@@ -327,11 +361,12 @@ impl Interpreter {
             _ => {},
           }
         }
+        childs_evaluated =  childs_evaluated && env.exists(node.clone());
       }
       _ => {}
     }
 
-    childs_evaluated && env.exists(node)
+    childs_evaluated
 
   }
   fn evaluate_function(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
