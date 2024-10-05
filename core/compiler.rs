@@ -189,6 +189,7 @@ impl Compiler {
     //println!("\n\n{:#?}\n```{}```\n\n", node, current);
     match node.kind {
       ANodeKind::NumericLiteral(value) => {
+        //format!("{}", value)
         format!("{ev_indent}mov rax, {}", value.to_string())
       },
 
