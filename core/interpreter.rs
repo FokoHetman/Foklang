@@ -111,6 +111,23 @@ impl Interpreter {
       _ => panic!("huh?")
     }
   }
+
+  fn nest(&mut self, bounds: Vec<(AST::Node, Vec<AST::Proventus>)>, body: Box<AST::Node>, nenv: &mut Environment) -> Vec<AST::Proventus> {
+    if bounds.len()==0 {
+      vec![self.evaluate(*body.clone(), nenv)]
+    } else {
+      let mut bounds = bounds;
+      let bound = bounds[0].clone();
+      bounds.remove(0);
+      let mut result: Vec<AST::Proventus> = vec![];
+      for x in bound.1 {
+        let mut t2_env = Environment{parent: Some(Box::new(nenv.clone())), ..Default::default()};
+        t2_env.declare(bound.0.clone(), x);
+        result.append(&mut self.nest(bounds.clone(), body.clone(), &mut t2_env));
+      }
+      result
+    }
+  }
   fn evaluate_list(&mut self, node: AST::Node, env: &mut Environment) -> AST::Proventus {
     match node.kind {
       AST::NodeKind::AdvancedDeclaration{body, assumptions} => {
@@ -213,15 +230,16 @@ impl Interpreter {
             _ => panic!("osvgkf")
           }
         }
-        let mut finale: Vec<AST::Proventus> = vec![];
+        
 
-        for i in final_bounds {
+        let finale: Vec<AST::Proventus> = self.nest(final_bounds, body, &mut t_env);
+        /*for i in final_bounds {
           for x in i.1 {
             let mut t2_env = Environment{parent: Some(Box::new(t_env.clone())), ..Default::default()};
             t2_env.declare(i.0.clone(), x);
             finale.push(self.evaluate(*body.clone(), &mut t2_env));
           }
-        }
+        }*/
 
         AST::Proventus{value: AST::Fructa::Inventarii(finale), id: 112}
         //panic!("{:#?}", final_bounds)
