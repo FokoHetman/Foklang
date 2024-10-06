@@ -64,8 +64,12 @@ fn mul_string(times: i32, string: String) -> String {
   result
 }
 
+pub enum Language {
+  Assembly,
+  C,
+}
 
-pub struct Compiler {pub stack_size: i32}
+pub struct Compiler {pub stack_size: i32, pub language: Language}
 
 
 impl Compiler {
@@ -81,7 +85,7 @@ impl Compiler {
       }
       _ => panic!("why that node dumbass compiler")
     }
-    aast.body.push(ANode{kind: ANodeKind::BuiltIn(AFunctions::returnfn(Box::new(ANode{kind: ANodeKind::NumericLiteral(0), id: -1}))),id:-1});
+    //aast.body.push(ANode{kind: ANodeKind::BuiltIn(AFunctions::returnfn(Box::new(ANode{kind: ANodeKind::NumericLiteral(0), id: -1}))),id:-1});
     aast
   }
 
@@ -171,20 +175,137 @@ impl Compiler {
   }
 
   pub fn code_gen(&mut self, ast: AAST, file: String, env: &mut Environment) -> String {
-    let mut result = format!("bits 64\nglobal _start\n_start:\n");
-    let mut indent = 2;
-    for i in ast.body {
-      println!("{:#?}", i.clone());
-      let n = &self.parse_node(i, &mut result, indent, env);
-      result += n;
+    match self.language {
+      Language::Assembly => {
+        let mut result = format!("bits 64\nglobal _start\n_start:\n");
+        let mut indent = 2;
+        for i in ast.body {
+          println!("{:#?}", i.clone());
+          let n = &self.parse_asm_node(i, &mut result, indent, env);
+          result += n;
+        }
+        result
+      },
+      Language::C => {
+        let mut result = format!("#include<stdio.h>\nint main() {{");
+        let mut indent = 2;
+        for i in ast.body {
+          println!("{:#?}", i.clone());
+          let n = &self.parse_c_node(i, &mut result, indent, env);
+          result += n;
+        }
+        result + ";}\n"
+      },
     }
-    result
+  }
+  pub fn parse_c_node(&mut self, node: ANode, current: &mut String, indent: i32, env: &mut Environment) -> String {
+    let ev_indent = mul_string(indent, String::from(" "));
+    //println!("\n\n{:#?}\n```{}```\n\n", node, current);
+    match node.kind {
+      ANodeKind::NumericLiteral(value) => {
+        //format!("{}", value)
+        format!("{}", value.to_string())
+      },
+
+
+      ANodeKind::Moenus(args, identifier) => {
+        //println!("{:#?}", env);
+        let location = env.get(identifier.clone());
+        //panic!("{:#?}", location)
+
+        let mut call = format!("{id}(", id=match identifier.kind {AST::NodeKind::Identifier{symbol, ..} => symbol, _ => panic!("fok")});//, 8*(self.stack_size-location[0].id-1))
+        for i in args {
+          let transformed = self.transform(i, env);
+          call += &self.parse_c_node(transformed, current, indent, env);
+          call += ",";
+        }
+        if call.ends_with(",") {
+          let mut callc = call.chars();
+          callc.next_back();
+          call = callc.collect::<String>();
+        }
+        call + ")"
+      }
+      ANodeKind::BuiltIn(fun) => {
+        match fun {
+          AFunctions::returnfn(value) => 
+              format!("return {};\n", self.parse_c_node(*value, current, indent, env))
+        }
+      },
+      ANodeKind::FunctionDeclaration(id, statement) => {
+        let (raw, childs) = match id.clone().kind {
+          AST::NodeKind::Identifier{symbol, childs} => (symbol, childs),
+          _ => panic!("how the foking fok")
+        };
+
+        // HERE, it is evaluated when identifier is undefined (smh);
+        let mut t_env = Environment{parent: Some(Box::new(env.clone())), ..Default::default()};
+        /*match id.clone().kind {
+          AST::NodeKind::Identifier{symbol, childs} => {
+            
+          },
+          _ => {}
+        }*/ 
+        let temp = self.parse_c_node(*statement.clone(), current, indent, &mut t_env);
+        //*current = self.inject_label(current.to_string(), format!("{raw}:\n{ev_indent}mov rbp, rsp\n{ev_indent}add rsp, 8\n{}\n{ev_indent}mov rsp, rbp\n{ev_indent}ret\n", temp), indent);
+        
+        let mut res = format!("int {raw}(");
+        for i in childs {
+          res+= &match i.kind { AST::NodeKind::Identifier{symbol, ..} => {symbol} _ => panic!("fuck you")};
+          res+= ",";
+        }
+        if res.ends_with(",") {
+          let mut resc = res.chars();
+          resc.next_back();
+          res = resc.collect::<String>();
+        }
+        res += &format!(") {{{}}};", self.parse_c_node(*statement.clone(), current, indent, env));
+        res
+        //format!("{ev_indent}call {raw}\n{ev_indent}push rax\n")
+      }
+      ANodeKind::BinaryExpression(left,right,operator) => {
+        match operator {
+          Operator::Addition => {
+              format!("{}+{}", self.parse_c_node(*left.clone(), current, indent, env), self.parse_c_node(*right.clone(), current, indent, env))
+
+              //format!("{}\n{ev_indent}push rax\n{}\n{ev_indent}push rax\n{ev_indent}pop rax\n{ev_indent}pop rbx\n{ev_indent}add rax, rbx\n", self.parse_node(*left, current, indent, env), self.parse_node(*right, current, indent, env))
+          },
+          Operator::Substraction => {
+            format!("{}-{}", self.parse_c_node(*left.clone(), current, indent, env), self.parse_c_node(*right.clone(), current, indent, env))
+          },
+          Operator::Multiplication => {
+            format!("{}*{}", self.parse_c_node(*left.clone(), current, indent, env), self.parse_c_node(*right.clone(), current, indent, env))
+
+          },
+          Operator::Division => {
+             format!("{}/{}", self.parse_c_node(*left.clone(), current, indent, env), self.parse_c_node(*right.clone(), current, indent, env))
+         },
+          _ => panic!("operator wweird")
+        }
+      }
+      ANodeKind::Identifier(s, childs) => {
+        let mut res = format!("{s}(");
+        for i in childs {
+          res+=&self.parse_c_node(i, current, indent, env);
+          res+=",";
+        }
+        if res.ends_with(",") {
+          let mut resc = res.chars();
+          resc.next_back();
+          res = resc.collect::<String>();
+        }
+        res + ")"
+      },
+      ANodeKind::Nullus => String::new(),
+      _ => panic!("node: {:#?}", node)
+    }
+    
   }
 
   pub fn inject_label(&mut self, current: String, label: String, indent: i32) -> String {
     format!("{}{label}_start:\n{}", current.split("_start:\n").collect::<Vec<&str>>()[0], current.split("_start:\n").collect::<Vec<&str>>()[1]).to_string()
   }
-  pub fn parse_node(&mut self, node: ANode, current: &mut String, indent: i32, env: &mut Environment) -> String {
+  pub fn parse_asm_node(&mut self, node: ANode, current: &mut String, indent: i32, env: &mut Environment) -> String {
     let ev_indent = mul_string(indent, String::from(" "));
     //println!("\n\n{:#?}\n```{}```\n\n", node, current);
     match node.kind {
@@ -204,7 +325,7 @@ impl Compiler {
       ANodeKind::BuiltIn(fun) => {
         match fun {
           AFunctions::returnfn(value) => 
-              format!("{}\n{ev_indent}push rax\n{ev_indent}pop rdi\n{ev_indent}mov rax, 60\n{ev_indent}syscall\n", self.parse_node(*value, current, indent, env))
+              format!("{}\n{ev_indent}push rax\n{ev_indent}pop rdi\n{ev_indent}mov rax, 60\n{ev_indent}syscall\n", self.parse_asm_node(*value, current, indent, env))
         }
       },
       ANodeKind::FunctionDeclaration(id, statement) => {
@@ -221,7 +342,7 @@ impl Compiler {
           },
           _ => {}
         }*/ 
-        let temp = self.parse_node(*statement, current, indent, &mut t_env);
+        let temp = self.parse_asm_node(*statement, current, indent, &mut t_env);
         *current = self.inject_label(current.to_string(), format!("{raw}:\n{ev_indent}mov rbp, rsp\n{ev_indent}add rsp, 8\n{}\n{ev_indent}mov rsp, rbp\n{ev_indent}ret\n", temp), indent);
 
 
@@ -232,9 +353,9 @@ impl Compiler {
         match operator {
           Operator::Addition => {
               let mut result = String::new();
-              result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+              result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*left.clone(), current, indent, env));
               self.stack_size+=1;
-              result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+              result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*right.clone(), current, indent, env));
               self.stack_size+=1;
               result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
               self.stack_size-=2;
@@ -245,9 +366,9 @@ impl Compiler {
           },
           Operator::Substraction => {
             let mut result = String::new();
-            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*left.clone(), current, indent, env));
             self.stack_size+=1;
-            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*right.clone(), current, indent, env));
             self.stack_size+=1;
             result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
             self.stack_size-=2;
@@ -256,9 +377,9 @@ impl Compiler {
           },
           Operator::Multiplication => {
             let mut result = String::new();
-            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*left.clone(), current, indent, env));
             self.stack_size+=1;
-            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*right.clone(), current, indent, env));
             self.stack_size+=1;
             result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
             self.stack_size-=2;
@@ -267,9 +388,9 @@ impl Compiler {
           },
           Operator::Division => {
             let mut result = String::new();
-            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*left.clone(), current, indent, env));
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*left.clone(), current, indent, env));
             self.stack_size+=1;
-            result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(*right.clone(), current, indent, env));
+            result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(*right.clone(), current, indent, env));
             self.stack_size+=1;
             result += &format!("{ev_indent}pop rbx\n{ev_indent}pop rax\n");
             self.stack_size-=2;
@@ -284,7 +405,7 @@ impl Compiler {
           match env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}})[0].clone().kind {
 
             ANodeKind::BuiltIn(..) => {
-              self.parse_node(env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}})[0].clone(), current, indent, env)
+              self.parse_asm_node(env.get(AST::Node{kind: AST::NodeKind::Identifier{symbol: s.clone(), childs: vec![]}})[0].clone(), current, indent, env)
             },
 
             ANodeKind::BuiltInDefinition(fun) => {
@@ -297,13 +418,13 @@ impl Compiler {
               let result = match fun {
                 ABuiltins::returnfn => ANode{kind: ANodeKind::BuiltIn(AFunctions::returnfn(Box::new(args_vec[0].clone()))), id: -1}
               };
-              self.parse_node(result, current, indent, env)
+              self.parse_asm_node(result, current, indent, env)
             },
 
             ANodeKind::Moenus(args, ..) => {
               let mut result = String::new();
               for i in childs {
-                result += &format!("{}\n{ev_indent}push rax\n", self.parse_node(i, current, indent, env));
+                result += &format!("{}\n{ev_indent}push rax\n", self.parse_asm_node(i, current, indent, env));
               }
               result += &format!("{ev_indent}call {s}\n");//{ev_indent}push rax\n")
               result
@@ -323,7 +444,7 @@ impl Compiler {
 
   pub fn compile(&mut self, program: AST::Node, env: &mut Environment, file: String) -> String {
     let transformed = self.transform_program(program, env);
-    //println!("{:#?} and {:#?}", transformed.clone(), env);
+    println!("{:#?} and {:#?}", transformed.clone(), env);
     let code = self.code_gen(transformed, file, env);
     code
     //AST::Proventus{value: AST::Fructa::Nullus, id: -2}
