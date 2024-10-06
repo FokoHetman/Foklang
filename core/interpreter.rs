@@ -1008,7 +1008,7 @@ impl Interpreter {
             fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env))
           }
           expected = 1
-        } else if f == builtins::load_file {
+        } else if f == builtins::load_file || f == builtins::load_string {
           if args_vec.len()>=1 {
             fargs = builtins::FunctionArgs::load_file(self.evaluate(args_vec[0].clone(), env), env.clone(), self.clone());
           }

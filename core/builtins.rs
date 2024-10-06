@@ -307,6 +307,16 @@ pub fn to_string(arguments: Arguments) -> Proventus {
   }
 }
 
+pub fn load_string(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::load_file(s, mut env, mut interpreter) => {
+      let parsed = interpreter.parser.parse(interpreter.tokenizer.tokenize(combine_list_to_string(s)));
+      interpreter.evaluate(parsed, &mut env)
+    }
+    _ => panic!("?")
+  }
+}
+
 pub fn load_file(arguments: Arguments) -> Proventus {
   match arguments.function {
     FunctionArgs::load_file(s, mut env, mut interpreter) => {
@@ -473,6 +483,7 @@ pub fn declare_builtins(env: &mut Environment) {
     (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
     (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
     (String::from("toString"), to_string), (String::from("globals"), globals), (String::from("read_file"), read_file), (String::from("load_file"), load_file),
+    (String::from("load_string"), load_string),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
