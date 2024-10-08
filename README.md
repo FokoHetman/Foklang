@@ -1,7 +1,6 @@
 # About FokLang
 aka Foko (literally me)'s language inspired by haskell, nix and (in the future) perl. Mostly was inspired to make it because configs (why use universal stuff like json when i can have my own thing) and well... having your own language is,,, kinda cool I think?
 
-h
 TODO: Loops, Conditionals
 # Installation
 ### For nix users:
