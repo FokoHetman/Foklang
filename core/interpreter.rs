@@ -1003,7 +1003,7 @@ impl Interpreter {
         } else if f == builtins::globals {
           fargs = builtins::FunctionArgs::zerum();
           expected = 0;
-        } else if f == builtins::read_file {
+        } else if f == builtins::read_file || f == builtins::envf {
           if args_vec.len()>=1 {
             fargs = builtins::FunctionArgs::single(self.evaluate(args_vec[0].clone(), env))
           }

@@ -2,7 +2,7 @@ use core::AST::{*};
 use core::env::Environment;
 use core::interpreter::Interpreter;
 
-use std::{process::Command, str, fs, collections::HashMap}; // TEMPORARY SOLUTION
+use std::{process::Command, env, str, fs, collections::HashMap}; // TEMPORARY SOLUTION
 
 
 pub fn print(arguments: Arguments) -> Proventus {
@@ -192,6 +192,20 @@ pub fn replace(arguments: Arguments) -> Proventus {
       Proventus{value: Fructa::Inventarii(result), id: -1}
     }
     _ => panic!("not taking that bs")
+  }
+}
+
+pub fn envf(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::single(var_name) => {
+      let val = env::var(combine_list_to_string(var_name)).unwrap();
+      let mut result: Vec<Proventus> = vec![];
+      for i in val.chars() {
+        result.push(Proventus{value: Fructa::Ustulo(i), id: -1});
+      }
+      Proventus{value: Fructa::Inventarii(result), id: -1}
+    }
+    _ => panic!("invalid args supplied")
   }
 }
 
@@ -483,7 +497,7 @@ pub fn declare_builtins(env: &mut Environment) {
     (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
     (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
     (String::from("toString"), to_string), (String::from("globals"), globals), (String::from("read_file"), read_file), (String::from("load_file"), load_file),
-    (String::from("load_string"), load_string),
+    (String::from("load_string"), load_string), (String::from("env"), envf),
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
