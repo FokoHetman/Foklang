@@ -29,6 +29,7 @@ pub enum Operator {
 
   ListSplitter,         // :    ->  (x:xs)
   DoubleColon,          // ::   -> function :: Type -> Type...
+  
 
 }
 #[derive(Debug,Clone,PartialEq)]
@@ -253,6 +254,20 @@ impl Tokenizer {
             }
           }
         },
+        '#' => {
+          match list_input[1] {
+            '!' => {
+              list_input.remove(0);
+              list_input.remove(0);
+              while list_input.len()>1 && list_input[0]!='\n' {
+                list_input.remove(0);
+              }
+            },
+            _ => {
+              
+            }
+          }
+        }
         _ => {
           pass = self.is_numeric(list_input[0].to_string()) || self.is_alpha(list_input[0].to_string());
           if self.is_numeric(list_input[0].to_string()) {
