@@ -208,6 +208,20 @@ pub fn envf(arguments: Arguments) -> Proventus {
     _ => panic!("invalid args supplied")
   }
 }
+pub fn exec(arguments: Arguments) -> Proventus {
+  match arguments.function {
+    FunctionArgs::single(sh_script) => {
+      let res = Command::new("sh").arg("-c").arg(combine_list_to_string(sh_script)).output().unwrap();
+      let real = str::from_utf8(&res.stdout).unwrap().replace("\n","");
+      let mut result = vec![];
+      for i in real.chars() {
+        result.push(Proventus{value: Fructa::Ustulo(i), id: -1});
+      }
+      Proventus{value: Fructa::Inventarii(result), id: -1}
+    }
+    _ => panic!("?")
+  }
+}
 
 pub fn get(arguments: Arguments) -> Proventus {
   let mut returnd = Proventus{value: Fructa::Nullus, id: -3};
@@ -497,7 +511,7 @@ pub fn declare_builtins(env: &mut Environment) {
     (String::from("type_of"), type_of), (String::from("take"), take), (String::from("length"), length), (String::from("head"), head),
     (String::from("tail"), tail), (String::from("replace"), replace), (String::from("split"), split), (String::from("toInt"), to_int),
     (String::from("toString"), to_string), (String::from("globals"), globals), (String::from("read_file"), read_file), (String::from("load_file"), load_file),
-    (String::from("load_string"), load_string), (String::from("env"), envf),
+    (String::from("load_string"), load_string), (String::from("env"), envf), (String::from("exec"), exec)
   ];
   for i in functions {
     declare_fn(i.0, i.1, env);
