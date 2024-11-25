@@ -43,7 +43,70 @@ pub enum ConfigFlag {
 pub struct Node {
   pub kind: NodeKind,
 }
-#[derive(Clone,Debug, PartialEq)]
+
+
+
+#[derive(Debug, Clone, PartialEq)]
+struct Int {                                // define as a for each a `elem` Z
+  value: i32,                               // is a
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Integer {                            // define as a for each a `elem` Z
+  components: Vec<i32>, // these create a bigger number
+}
+
+#[derive(Debug,Clone,PartialEq)]
+struct Fraction {                           // define as p/q for each p,q `elem` R
+  numeral: Box<RealNumericalConcept>,       // is p
+  nominal: Box<RealNumericalConcept>,       // is q
+}
+
+
+#[derive(Debug,Clone,PartialEq)]
+enum RealNumericalConcept {                 // define as a for each not a `elem` I
+  Int(Int),
+  Integer(Integer),
+  Fraction(Fraction),
+}
+
+
+
+
+#[derive(Debug,Clone,PartialEq)]
+struct ImaginaryNumber {                    // define a + bi; a,b `elem` R
+  real: RealNumericalConcept,               // is a
+  imaginary: RealNumericalConcept,          // is b
+}
+
+#[derive(Debug,Clone,PartialEq)]
+enum ImaginaryNumericalConcept {
+  ImaginaryNumber(ImaginaryNumber),
+}
+
+#[derive(Debug,Clone,PartialEq)]
+enum NumericalConcept {
+  Real(RealNumericalConcept),
+  Imaginary(ImaginaryNumericalConcept),
+}
+
+#[derive(Debug,Clone,PartialEq)]
+enum LiteralConcept {
+
+}
+
+
+#[derive(Debug,Clone,PartialEq)]
+pub enum Concept {
+  Nullus,
+  Numerical(NumericalConcept),
+  Literal(LiteralConcept),
+  /*Conditional(ConditionalConcept),
+  Function(FunctionConcept),
+  List(ListConcept),*/
+}
+
+/*#[derive(Clone,Debug, PartialEq)]
 pub enum Fructa {
   Nullus,
   Numerum(i32),
@@ -54,108 +117,9 @@ pub enum Fructa {
   BuiltIn(fn(builtins::Arguments) -> Proventus, /*cached args*/ Vec<Node>),
   Causor(Vec<(Node,Proventus)>),
   Inventarii(Vec<Proventus>),
-}
+}*/
 
 
-#[derive(Clone,Debug, PartialEq)]
-pub struct Proventus {
-  pub value: Fructa,
-  pub id: i32,
-}
-
-
-impl Default for Proventus {
-  fn default() -> Proventus {
-    Proventus{value: Fructa::Nullus, id: 0}
-  }
-}
-
-impl Fructa {
-  pub fn display(&self) -> String {
-    match self {
-      Fructa::Nullus => String::new(),
-      Fructa::Numerum(i) => i.to_string(),
-      Fructa::Filum(s) => s.to_string(),
-      Fructa::Causor(b) => format!("{:#?}", b),
-      Fructa::Inventarii(b) => {
-        let mut result = String::from("[");
-        let mut string = String::new();
-        let mut stringlist = true;
-
-        for i in b {
-          string += &match i.value {
-            Fructa::Ustulo(c) => c.to_string(),
-            _ => {
-              stringlist = false;
-              String::new()
-            }
-          };
-          result+=&(i.value.display()+" ")
-        }
-        if stringlist {
-          string
-        } else {
-          result+"]"
-        }
-      },
-      Fructa::Condicio(b) => b.to_string(),
-      Fructa::Ustulo(c) => c.to_string(),
-      Fructa::Moenus(args, statement) => {
-        let mut result = String::new();
-        for i in args {
-          result += "\\";
-          result += &i.kind.display();
-          result+=" -> ";
-        }
-        //result += " => ";
-        result += &statement.kind.display();
-        result
-        
-      }
-      _ => panic!("display not implemented")
-    }
-  }
-  pub fn display_type(&self) -> String {
-    match self {
-      Fructa::Nullus => String::from("Nullus"),
-      Fructa::Numerum(_) => String::from("Int"),
-      Fructa::Condicio(_) => String::from("bool"),
-      Fructa::Ustulo(_) => String::from("char"),
-      Fructa::Inventarii(i) => {
-        let mut result = String::from("[");
-        
-        if i.len()>0 {
-          result+=&i[0].value.display_type();
-        }
-        result+="]";
-        result
-      },
-      Fructa::Causor(c) => {
-        let mut result = String::from("{");
-        for i in c {
-          result += &format!("{}: {};", i.0.kind.display(), i.1.value.display_type());
-        }
-        result += "}";
-        result
-      },
-      Fructa::Moenus(args, statement) => {
-        let mut result = String::new();
-        for i in args {
-          result += "\\";
-          result += &i.kind.evaluate_identifier_type(statement.clone()); // replace with evaluating needed type according to function
-          result += " -> ";
-        }
-        //println!("{:#?}", statement.kind);
-        result += &statement.kind.evaluate_type(); // replace with evaluating function return type
-        result
-      }
-      _ => panic!("display type not implemented")
-    }
-  }
-  /*pub fn getType(&self) -> String {
-    
-  }*/
-}
 impl NodeKind {
   pub fn display(&self) -> String {
     match self {
