@@ -1,5 +1,5 @@
 use crate::core::tokenizer::{Operator};
-use crate::core::builtins;
+//use crate::core::builtins;
 use core::ops::Add;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -51,8 +51,9 @@ pub trait NumericalConvertability {
 }
 
 pub trait Arithmetics {
-  fn add(left: Self,right: Self) -> Self;
-  fn substract(left: Self, right: Self) -> Self;
+  /*fn add(left: Self,right: Self) -> Self;
+  fn substract(left: Self, right: Self) -> Self;*/
+  fn adversity(node: Self) -> Self;
 }
 
 pub trait Operations {
@@ -68,7 +69,7 @@ pub struct Int {                                // define as a for each a `elem`
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Integer {                            // define as a for each a `elem` Z
-  pub components: Vec<i32>, // these create a bigger number
+  pub components: Vec<i32>, // product of these create a bigger number
 }
 
 #[derive(Debug,Clone,PartialEq)]
@@ -94,7 +95,7 @@ pub enum RealNumericalConcept {                 // define as a for each not a `e
 
 
 #[derive(Debug,Clone,PartialEq)]
-pub struct ComplexNumber {                    // define a + bi; a,b `elem` R
+pub struct ComplexNumber {                      // define a + bi; a,b `elem` R
   pub real: RealNumericalConcept,               // is a
   pub imaginary: RealNumericalConcept,          // is b
 }
@@ -112,13 +113,21 @@ pub enum NumericalConcept {
 }
 
 #[derive(Debug,Clone,PartialEq)]
+pub enum BinaryOpConcept {
+  Addition(Box<Concept>, Box<Concept>),
+  Multiplication(Box<Concept>, Box<Concept>),
+  Exponentiation(Box<Concept>, Box<Concept>),
+}
+
+#[derive(Debug,Clone,PartialEq)]
 pub enum OperationConcept {
-  BinaryOperation(),
+  BinaryOperation(BinaryOpConcept),
   Idk
 }
 
 #[derive(Debug,Clone,PartialEq)]
 pub enum Concept {
+  Omnis,
   Nullus,
   Numerical(NumericalConcept),
   Operation(OperationConcept),
@@ -126,6 +135,40 @@ pub enum Concept {
   Conditional(ConditionalConcept),
   Function(FunctionConcept),
   List(ListConcept),*/
+}
+
+impl Arithmetics for Concept {
+  fn adversity(node: Self) -> Self {
+    match node {
+      Concept::Numerical(N) => {
+        match N {
+          NumericalConcept::Real(R) => {
+            Concept::Numerical(NumericalConcept::Real(
+            match R {
+              RealNumericalConcept::Int(i) => RealNumericalConcept::Int(Int {value: -i.value}),
+              RealNumericalConcept::Integer(i_product) => RealNumericalConcept::Integer(Integer {components: i_product.components}),
+              RealNumericalConcept::Fraction(frac) => RealNumericalConcept::Fraction(Fraction {numeral: Box::new(RealNumericalConcept::from_i32(-frac.numeral.to_i32())), nominal: frac.nominal}),
+              RealNumericalConcept::Convertible(c) => RealNumericalConcept::Convertible(Convertible {value: -c.value})
+            }))
+          },
+          NumericalConcept::Imaginary(I) => {
+            Concept::Numerical(NumericalConcept::Imaginary(
+            match I {
+              ImaginaryNumericalConcept::ImaginaryNumber() => ImaginaryNumericalConcept::ComplexNumber(ComplexNumber{real: RealNumericalConcept::from_i32(0), imaginary: RealNumericalConcept::from_i32(-1)}),
+              ImaginaryNumericalConcept::ComplexNumber(c) => ImaginaryNumericalConcept::ComplexNumber(ComplexNumber{real: RealNumericalConcept::from_i32(-c.real.to_i32()), imaginary: RealNumericalConcept::from_i32(-c.imaginary.to_i32())}),
+            }))
+          },
+        }
+      },
+      Concept::Nullus => {
+        Concept::Omnis
+      }
+      Concept::Omnis => {
+        Concept::Nullus
+      }
+      _ => panic!("idk")
+    }
+  }
 }
 
 /*
@@ -141,7 +184,7 @@ impl Arithmetics for NumericalConcept {
 }
 impl Operations for Concept {
   fn add(_: Self,_: Self) -> Self {
-      
+     n
   }
   fn substract(_: Self, _: Self) -> Self {
       

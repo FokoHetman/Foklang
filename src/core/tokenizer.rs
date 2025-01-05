@@ -9,9 +9,8 @@ pub enum Operator {
   Multiplication,       // *    ->  x * 2
   Division,             // /    ->  e / 2
   Exponentiation,       // ^    ->  e ^ x
-  DivideRest,           // %    -> a % b
   Equal,                // =    ->  x = 4
-  
+  Elem,                 // elem -> x elem {1,2}
   RightArrow,           // ->   ->  x -> idk
   LeftArrow,            // <-   ->  x <- [1..10]
   
@@ -54,6 +53,8 @@ pub enum TokenType {
   Operator,
   Identifier,
   Bool,
+
+  Elem,
 
   EOF,
   Nullus,
@@ -104,7 +105,10 @@ impl Tokenizer {
     let mut list_input: Vec<char> = input.replace("\\n", "\n").replace("\\t", "\t").replace("\\\"", "\"").replace("\\'", "\'").replace("\\x1b", "\x1b").chars().collect();
     let mut tokens: Vec<Token> = [].to_vec();
     let mut pass;
-    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false))), (String::from("if"), (TokenType::If, TokenValue::Nullus)), (String::from("match"), (TokenType::Match, TokenValue::Nullus))]);
+    let speciales: HashMap<String, (TokenType, TokenValue)> = HashMap::from([(String::from("true"), (TokenType::Bool, TokenValue::Bool(true))), (String::from("false"), (TokenType::Bool, TokenValue::Bool(false))),
+        (String::from("if"), (TokenType::If, TokenValue::Nullus)), (String::from("match"), (TokenType::Match, TokenValue::Nullus)),
+        (String::from("elem"), (TokenType::Elem, TokenValue::Operator(Operator::Elem))),
+    ]);
     while list_input.len()>0 {
       pass = false;
       let current_char = list_input[0];
@@ -170,9 +174,6 @@ impl Tokenizer {
         },
         '/' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Division)});
-        },
-        '%' => {
-          tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::DivideRest)});
         },
         '^' => {
           tokens.push(Token{tokentype: TokenType::Operator, tokenvalue: TokenValue::Operator(Operator::Exponentiation)});  

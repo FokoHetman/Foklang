@@ -1,12 +1,12 @@
 use crate::core::{AST, error_handler::ErrorHandler};
 
 #[derive(Clone,Debug)]
-pub struct Environment {pub parent: Option<Box<Environment>>, pub functions: Vec<(AST::Node, AST::Proventus)>, 
+pub struct Environment {pub parent: Option<Box<Environment>>, pub functions: Vec<(AST::Node, AST::Concept)>, 
     pub node_stack: Vec<AST::Node>, pub current_node: i32, pub error_handler: ErrorHandler}
 
 
 impl Environment {
-  pub fn declare(&mut self, identifier: AST::Node, value: AST::Proventus) -> AST::Proventus {
+  pub fn declare(&mut self, identifier: AST::Node, value: AST::Concept) -> AST::Concept {
     match identifier.kind {
       AST::NodeKind::Identifier{symbol: ref symbol, ref childs} => {
         for i in &self.functions {
@@ -84,11 +84,11 @@ impl Environment {
       _ => false,
     }
   }
-  pub fn get(&self, identifier: AST::Node) -> Vec<AST::Proventus> {
+  pub fn get(&self, identifier: AST::Node) -> Vec<AST::Concept> {
     let env = self.resolve(identifier.clone());
     match identifier.kind {
       AST::NodeKind::Identifier{symbol: ref s, ..} => {
-        let mut results: Vec<AST::Proventus> = vec![];
+        let mut results: Vec<AST::Concept> = vec![];
         for i in env.functions {
           if match &i.0.kind {
             AST::NodeKind::Identifier{symbol: s2, ..} => {

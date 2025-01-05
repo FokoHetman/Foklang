@@ -73,7 +73,8 @@ impl Parser {
   }
   pub fn parse_type_declaration(&mut self, tokens: &mut Vec<Token>, depth: i32) -> AST::Node {
     let mut left = self.parse_statements(tokens, depth); // Function
-    while self.at(tokens).tokenvalue == TokenValue::Operator(Operator::DoubleColon) {
+    while self.at(tokens).tokenvalue == TokenValue::Operator(Operator::DoubleColon) ||
+        self.at(tokens).tokenvalue == TokenValue::Operator(Operator::Elem) {
       self.eat(tokens);
       left = AST::Node{kind: AST::NodeKind::TypeDeclaration{
         identifier: Box::new(left),
@@ -169,13 +170,11 @@ impl Parser {
   pub fn parse_multiplicative_expr(&mut self, tokens: &mut Vec<Token>, depth: i32) -> AST::Node {
     let mut left = self.parse_exponential_expr(tokens, depth);
     while self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Multiplication) ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Division) ||
-          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::DivideRest) {
+          self.at(tokens).tokenvalue==TokenValue::Operator(Operator::Division) {
       left = AST::Node{kind: AST::NodeKind::BinaryExpression{
         left: Box::new(left),
         operator: match self.eat(tokens).tokenvalue {
             TokenValue::Operator(Operator::Multiplication) => Operator::Multiplication,
-            TokenValue::Operator(Operator::DivideRest) => Operator::DivideRest,
             _ => Operator::Division,
         },
         right: Box::<AST::Node>::new(self.parse_exponential_expr(tokens, depth)),
