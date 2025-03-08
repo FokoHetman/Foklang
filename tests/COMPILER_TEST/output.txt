@@ -1,0 +1,325 @@
+AAST {
+    body: [
+        ANode {
+            kind: FunctionDeclaration(
+                Node {
+                    kind: Identifier {
+                        symbol: "f",
+                        childs: [
+                            Node {
+                                kind: Identifier {
+                                    symbol: "x",
+                                    childs: [],
+                                },
+                            },
+                            Node {
+                                kind: Identifier {
+                                    symbol: "y",
+                                    childs: [],
+                                },
+                            },
+                        ],
+                    },
+                },
+                ANode {
+                    kind: BinaryExpression(
+                        ANode {
+                            kind: Identifier(
+                                "x",
+                                [],
+                            ),
+                            id: -1,
+                        },
+                        ANode {
+                            kind: Identifier(
+                                "y",
+                                [],
+                            ),
+                            id: -1,
+                        },
+                        Addition,
+                    ),
+                    id: -1,
+                },
+            ),
+            id: -2,
+        },
+        ANode {
+            kind: Nullus,
+            id: -1,
+        },
+        ANode {
+            kind: FunctionDeclaration(
+                Node {
+                    kind: Identifier {
+                        symbol: "a",
+                        childs: [],
+                    },
+                },
+                ANode {
+                    kind: Identifier(
+                        "f",
+                        [
+                            ANode {
+                                kind: NumericLiteral(
+                                    2,
+                                ),
+                                id: -1,
+                            },
+                            ANode {
+                                kind: NumericLiteral(
+                                    4,
+                                ),
+                                id: -1,
+                            },
+                        ],
+                    ),
+                    id: -1,
+                },
+            ),
+            id: -2,
+        },
+        ANode {
+            kind: Nullus,
+            id: -1,
+        },
+        ANode {
+            kind: Identifier(
+                "return",
+                [
+                    ANode {
+                        kind: Identifier(
+                            "a",
+                            [],
+                        ),
+                        id: -1,
+                    },
+                ],
+            ),
+            id: -1,
+        },
+    ],
+} and Environment {
+    parent: None,
+    functions: [
+        (
+            Node {
+                kind: Identifier {
+                    symbol: "return",
+                    childs: [],
+                },
+            },
+            ANode {
+                kind: BuiltInDefinition(
+                    returnfn,
+                ),
+                id: -3,
+            },
+        ),
+        (
+            Node {
+                kind: Identifier {
+                    symbol: "print",
+                    childs: [],
+                },
+            },
+            ANode {
+                kind: BuiltInDefinition(
+                    print,
+                ),
+                id: -3,
+            },
+        ),
+        (
+            Node {
+                kind: Identifier {
+                    symbol: "f",
+                    childs: [
+                        Node {
+                            kind: Identifier {
+                                symbol: "x",
+                                childs: [],
+                            },
+                        },
+                        Node {
+                            kind: Identifier {
+                                symbol: "y",
+                                childs: [],
+                            },
+                        },
+                    ],
+                },
+            },
+            ANode {
+                kind: Moenus(
+                    [
+                        Node {
+                            kind: Identifier {
+                                symbol: "x",
+                                childs: [],
+                            },
+                        },
+                        Node {
+                            kind: Identifier {
+                                symbol: "y",
+                                childs: [],
+                            },
+                        },
+                    ],
+                    Node {
+                        kind: Identifier {
+                            symbol: "f",
+                            childs: [
+                                Node {
+                                    kind: Identifier {
+                                        symbol: "x",
+                                        childs: [],
+                                    },
+                                },
+                                Node {
+                                    kind: Identifier {
+                                        symbol: "y",
+                                        childs: [],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ),
+                id: 0,
+            },
+        ),
+        (
+            Node {
+                kind: Identifier {
+                    symbol: "a",
+                    childs: [],
+                },
+            },
+            ANode {
+                kind: Moenus(
+                    [],
+                    Node {
+                        kind: Identifier {
+                            symbol: "a",
+                            childs: [],
+                        },
+                    },
+                ),
+                id: 1,
+            },
+        ),
+    ],
+    types: [],
+    node_stack: [],
+    current_node: 0,
+    error_handler: ErrorHandler,
+}
+ANode {
+    kind: FunctionDeclaration(
+        Node {
+            kind: Identifier {
+                symbol: "f",
+                childs: [
+                    Node {
+                        kind: Identifier {
+                            symbol: "x",
+                            childs: [],
+                        },
+                    },
+                    Node {
+                        kind: Identifier {
+                            symbol: "y",
+                            childs: [],
+                        },
+                    },
+                ],
+            },
+        },
+        ANode {
+            kind: BinaryExpression(
+                ANode {
+                    kind: Identifier(
+                        "x",
+                        [],
+                    ),
+                    id: -1,
+                },
+                ANode {
+                    kind: Identifier(
+                        "y",
+                        [],
+                    ),
+                    id: -1,
+                },
+                Addition,
+            ),
+            id: -1,
+        },
+    ),
+    id: -2,
+}
+ANode {
+    kind: Nullus,
+    id: -1,
+}
+ANode {
+    kind: FunctionDeclaration(
+        Node {
+            kind: Identifier {
+                symbol: "a",
+                childs: [],
+            },
+        },
+        ANode {
+            kind: Identifier(
+                "f",
+                [
+                    ANode {
+                        kind: NumericLiteral(
+                            2,
+                        ),
+                        id: -1,
+                    },
+                    ANode {
+                        kind: NumericLiteral(
+                            4,
+                        ),
+                        id: -1,
+                    },
+                ],
+            ),
+            id: -1,
+        },
+    ),
+    id: -2,
+}
+ANode {
+    kind: Nullus,
+    id: -1,
+}
+ANode {
+    kind: Identifier(
+        "return",
+        [
+            ANode {
+                kind: Identifier(
+                    "a",
+                    [],
+                ),
+                id: -1,
+            },
+        ],
+    ),
+    id: -1,
+}
+Compiler Out: 
+#include<stdio.h>
+//FUNCTIONS
+int f(int x, int y) {
+  return x + y;};
+//END FUNCTIONS
+
+int main() {int a = f(2, 4);return(a);}
+
+Saving to main.c
